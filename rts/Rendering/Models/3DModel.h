@@ -40,18 +40,28 @@ struct LocalModelPiece;
 
 
 struct SVertexData {
-	SVertexData() : normal(UpVector) {}
+	SVertexData() = default;
+	SVertexData(const float3& p, const float3& n, const float3& s, const float3& t, const float2& uv0, const float2& uv1, uint32_t i) {
+		pos = p;
+		normal = n;
+		sTangent = s;
+		tTangent = t;
+		texCoords[0] = uv0;
+		texCoords[1] = uv1;
+		pieceIndex = i;
+	}
 
 	float3 pos;
-	float3 normal;
+	float3 normal = UpVector;
 	float3 sTangent;
 	float3 tTangent;
 
-	//< Second channel is optional, still good to have. Also makes
-	//< sure the struct is 64bytes in size (ATi's prefers such VBOs)
-	//< supporting an arbitrary number of channels would be easy but
-	//< overkill (for now)
+	// TODO:
+	//   with pieceIndex this struct is no longer 64 bytes in size which ATI's prefer
+	//   support an arbitrary number of channels, would be easy but overkill (for now)
 	float2 texCoords[NUM_MODEL_UVCHANNS];
+
+	uint32_t pieceIndex = 0;
 };
 
 
@@ -60,12 +70,12 @@ struct S3DModelPiecePart {
 public:
 	struct RenderData {
 		float3 dir;
-		size_t vboOffset;
-		size_t indexCount;
+		size_t vboOffset = 0;
+		size_t indexCount = 0;
 	};
 
-	static const int SHATTER_MAX_PARTS  = 10;
-	static const int SHATTER_VARIATIONS = 2;
+	static constexpr int SHATTER_MAX_PARTS = 10;
+	static constexpr int SHATTER_VARIATIONS = 2;
 
 	std::vector<RenderData> renderData;
 };
@@ -95,7 +105,7 @@ struct S3DModelPiece {
 		parent = nullptr;
 		colvol = {};
 
-		pieceMatrix.LoadIdentity();
+		bposeMatrix.LoadIdentity();
 		bakedMatrix.LoadIdentity();
 
 		offset = ZeroVector;
@@ -152,10 +162,10 @@ public:
 	void Shatter(float, int, int, int, const float3, const float3, const CMatrix44f&) const;
 
 	void SetPieceMatrix(const CMatrix44f& m) {
-		pieceMatrix = m * ComposeTransform(offset, ZeroVector, scales);
+		bposeMatrix = m * ComposeTransform(offset, ZeroVector, scales);
 
 		for (S3DModelPiece* c: children) {
-			c->SetPieceMatrix(pieceMatrix);
+			c->SetPieceMatrix(bposeMatrix);
 		}
 	}
 	void SetBakedMatrix(const CMatrix44f& m) {
@@ -186,6 +196,7 @@ public:
 	const CollisionVolume* GetCollisionVolume() const { return &colvol; }
 	      CollisionVolume* GetCollisionVolume()       { return &colvol; }
 
+	bool HasParent() const { return (parent != nullptr); }
 	bool HasGeometryData() const { return (GetVertexDrawIndexCount() >= 3); }
 
 private:
@@ -199,7 +210,7 @@ public:
 	S3DModelPiece* parent = nullptr;
 	CollisionVolume colvol;
 
-	CMatrix44f pieceMatrix;      /// bind-pose transform, including baked rots
+	CMatrix44f bposeMatrix;      /// bind-pose transform, including baked rots
 	CMatrix44f bakedMatrix;      /// baked local-space rotations
 
 	float3 offset;               /// local (piece-space) offset wrt. parent piece

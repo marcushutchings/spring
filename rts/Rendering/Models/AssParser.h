@@ -16,7 +16,7 @@ struct aiNode;
 struct aiScene;
 class LuaTable;
 
-typedef SVertexData SAssVertex;
+using SAssVertex = SVertexData;
 
 
 struct SAssPiece: public S3DModelPiece

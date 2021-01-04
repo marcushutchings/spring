@@ -15,7 +15,7 @@ enum {
 };
 
 
-typedef SVertexData SS3OVertex;
+using SS3OVertex = SVertexData;
 
 
 struct SS3OPiece: public S3DModelPiece {
