@@ -1,6 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "AssParser.h"
+#include "ModelVBO.h"
 #include "3DModel.h"
 #include "3DModelLog.h"
 #include "AssIO.h"
@@ -829,14 +830,9 @@ void SAssPiece::UploadGeometryVBOs()
 	if (!HasGeometryData())
 		return;
 
-	//FIXME share 1 VBO for ALL models
-	vboAttributes.Bind(GL_ARRAY_BUFFER);
-	vboAttributes.New(vertices.size() * sizeof(SAssVertex), GL_STATIC_DRAW, &vertices[0]);
-	vboAttributes.Unbind();
-
-	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	vboIndices.New(indices.size() * sizeof(unsigned int), GL_STATIC_DRAW, &indices[0]);
-	vboIndices.Unbind();
+	vertStartElem = ModelVBO::GetInstance().GetVertexStartIndex<SAssVertex>(model->id);
+	vertStartIndx = ModelVBO::GetInstance().GetIndexStartIndex<SAssVertex>(model->id);
+	ModelVBO::GetInstance().UploadGeometryData<SAssVertex>(model->id, vertices, indices);
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();

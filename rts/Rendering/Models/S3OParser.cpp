@@ -5,6 +5,7 @@
 
 #include "S3OParser.h"
 #include "s3o.h"
+#include "ModelVBO.h"
 #include "Game/GlobalUnsynced.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
@@ -180,14 +181,9 @@ void SS3OPiece::UploadGeometryVBOs()
 	if (!HasGeometryData())
 		return;
 
-	//FIXME share 1 VBO for ALL models
-	vboAttributes.Bind(GL_ARRAY_BUFFER);
-	vboAttributes.New(vertices.size() * sizeof(SS3OVertex), GL_STATIC_DRAW, &vertices[0]);
-	vboAttributes.Unbind();
-
-	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	vboIndices.New(indices.size() * sizeof(unsigned int), GL_STATIC_DRAW, &indices[0]);
-	vboIndices.Unbind();
+	vertStartElem = ModelVBO::GetInstance().GetVertexStartIndex<SS3OVertex>(model->id);
+	vertStartIndx = ModelVBO::GetInstance().GetIndexStartIndex<SS3OVertex>(model->id);
+	ModelVBO::GetInstance().UploadGeometryData<SS3OVertex>(model->id, vertices, indices);
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();

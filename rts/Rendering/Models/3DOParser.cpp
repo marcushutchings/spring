@@ -4,6 +4,7 @@
 #include <cinttypes>
 
 #include "3DOParser.h"
+#include "ModelVBO.h"
 
 #include "Sim/Misc/CollisionVolume.h"
 #include "System/Exceptions.h"
@@ -401,9 +402,6 @@ void S3DOPiece::UploadGeometryVBOs()
 	if (prims.empty())
 		return;
 
-	std::vector<unsigned int>& indices = vertexIndices;
-	std::vector<S3DOVertex>& vertices = vertexAttribs;
-
 	// assume all faces are quads
 	indices.reserve(prims.size() * 6);
 	vertices.reserve(prims.size() * 4);
@@ -445,15 +443,15 @@ void S3DOPiece::UploadGeometryVBOs()
 		}
 	}
 
+	{
+		auto& modelVBO = ModelVBO::GetInstance();
+		vertStartElem = modelVBO.GetVertexStartIndex<S3DOVertex>(model->id);
+		vertStartIndx = modelVBO.GetIndexStartIndex<S3DOVertex>(model->id);
+		modelVBO.UploadGeometryData<S3DOVertex>(model->id, vertices, indices);
+		vboAttributes = modelVBO.GetVertexVBO<S3DOVertex>(model->id);
+		vboIndices = modelVBO.GetIndexVBO<S3DOVertex>(model->id); !!!!!!!!!!
+	}
 
-	//FIXME share 1 VBO for ALL models
-	vboAttributes.Bind(GL_ARRAY_BUFFER);
-	vboAttributes.New(vertices.size() * sizeof(S3DOVertex), GL_STATIC_DRAW, &vertices[0]);
-	vboAttributes.Unbind();
-
-	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	vboIndices.New(indices.size() * sizeof(unsigned), GL_STATIC_DRAW, &indices[0]);
-	vboIndices.Unbind();
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();
@@ -463,7 +461,7 @@ void S3DOPiece::UploadGeometryVBOs()
 
 void S3DOPiece::BindVertexAttribVBOs() const
 {
-	vboAttributes.Bind(GL_ARRAY_BUFFER);
+	ModelVBO::GetInstance().Bind(GL_ARRAY_BUFFER);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, sizeof(S3DOVertex), vboAttributes.GetPtr(offsetof(S3DOVertex, pos)));
 
@@ -477,7 +475,7 @@ void S3DOPiece::BindVertexAttribVBOs() const
 		glClientActiveTexture(GL_TEXTURE0);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glTexCoordPointer(2, GL_FLOAT, sizeof(S3DOVertex), vboAttributes.GetPtr(offsetof(S3DOVertex, texCoord)));
-	vboAttributes.Unbind();
+	ModelVBO::GetInstance().Unbind();
 }
 
 

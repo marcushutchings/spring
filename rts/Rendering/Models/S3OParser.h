@@ -20,9 +20,9 @@ using SS3OVertex = SVertexData;
 
 struct SS3OPiece: public S3DModelPiece {
 public:
-	SS3OPiece() = default;
+	SS3OPiece() = delete;
 	SS3OPiece(const SS3OPiece&) = delete;
-	SS3OPiece(SS3OPiece&& p) { *this = std::move(p); }
+	SS3OPiece(SS3OPiece&& p) = default;
 
 	SS3OPiece& operator = (const SS3OPiece& p) = delete;
 	SS3OPiece& operator = (SS3OPiece&& p) {

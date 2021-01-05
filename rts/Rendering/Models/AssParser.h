@@ -21,9 +21,9 @@ using SAssVertex = SVertexData;
 
 struct SAssPiece: public S3DModelPiece
 {
-	SAssPiece() = default;
+	SAssPiece() = delete;
 	SAssPiece(const SAssPiece&) = delete;
-	SAssPiece(SAssPiece&& p) { *this = std::move(p); }
+	SAssPiece(SAssPiece&& p) = default;
 
 	SAssPiece& operator = (const SAssPiece& p) = delete;
 	SAssPiece& operator = (SAssPiece&& p) {

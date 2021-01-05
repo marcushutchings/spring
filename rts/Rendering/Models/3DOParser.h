@@ -71,9 +71,9 @@ struct S3DOPrimitive
 
 struct S3DOPiece: public S3DModelPiece
 {
-	S3DOPiece() = default;
+	S3DOPiece() = delete;
 	S3DOPiece(const S3DOPiece&) = delete;
-	S3DOPiece(S3DOPiece&& p) { *this = std::move(p); }
+	S3DOPiece(S3DOPiece&& p) = default;
 
 	S3DOPiece& operator = (const S3DOPiece& p) = delete;
 	S3DOPiece& operator = (S3DOPiece&& p) {
@@ -97,8 +97,8 @@ struct S3DOPiece: public S3DModelPiece
 		verts.clear();
 		prims.clear();
 
-		vertexAttribs.clear();
-		vertexIndices.clear();
+		vertices.clear();
+		indices.clear();
 
 		emitPos = ZeroVector;
 		emitDir = ZeroVector;
@@ -107,11 +107,11 @@ struct S3DOPiece: public S3DModelPiece
 	void UploadGeometryVBOs() override;
 	void DrawForList() const override;
 
-	unsigned int GetVertexCount() const override { return vboAttributes.GetSize(); }
-	unsigned int GetVertexDrawIndexCount() const override { return vboIndices.GetSize(); }
-	const float3& GetVertexPos(const int idx) const override { return vertexAttribs[idx].pos; }
-	const float3& GetNormal(const int idx)    const override { return vertexAttribs[idx].normal; }
-	const std::vector<unsigned>& GetVertexIndices() const override { return vertexIndices; }
+	unsigned int GetVertexCount() const override { return vertices.size(); }
+	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }
+	const float3& GetVertexPos(const int idx) const override { return vertices[idx].pos; }
+	const float3& GetNormal(const int idx)    const override { return vertices[idx].normal; }
+	const std::vector<unsigned>& GetVertexIndices() const override { return indices; }
 
 	float3 GetEmitPos() const override { return emitPos; }
 	float3 GetEmitDir() const override { return emitDir; }
@@ -145,8 +145,8 @@ public:
 	std::vector<float3> verts; //FIXME
 	std::vector<S3DOPrimitive> prims;
 
-	std::vector<S3DOVertex> vertexAttribs;
-	std::vector<unsigned int> vertexIndices;
+	std::vector<S3DOVertex> vertices;
+	std::vector<unsigned int> indices;
 
 	float3 emitPos;
 	float3 emitDir;

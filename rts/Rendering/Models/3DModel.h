@@ -7,6 +7,7 @@
 #include <array>
 #include <vector>
 #include <string>
+#include <cstdint>
 
 #include "Lua/LuaObjectMaterial.h"
 #include "Rendering/GL/VBO.h"
@@ -89,10 +90,11 @@ public:
  */
 
 struct S3DModelPiece {
-	S3DModelPiece() = default;
+	S3DModelPiece() = delete;
+	S3DModelPiece(const S3DModel* model) : model{model} {};
 
 	// runs during global deinit, can not Clear() since that touches OpenGL
-	virtual ~S3DModelPiece() { assert(vboIndices.vboId == 0 && vboShatterIndices.vboId == 0); }
+	virtual ~S3DModelPiece() { assert(vboShatterIndices.vboId == 0); }
 
 	virtual void Clear() {
 		name.clear();
@@ -138,8 +140,9 @@ struct S3DModelPiece {
 	void BindShatterIndexVBO() const { vboShatterIndices.Bind(GL_ELEMENT_ARRAY_BUFFER); }
 	void UnbindShatterIndexVBO() const { vboShatterIndices.Unbind(); }
 
-	const VBO& GetIndexVBO() const { return vboIndices; }
-	const VBO& GetAttribVBO() const { return vboAttributes; }
+	//const VBO& GetIndexVBO() const { return vboIndices; }
+	//const VBO& GetAttribVBO() const { return vboAttributes; }
+
 	const VBO& GetShatterIndexVBO() const { return vboShatterIndices; }
 
 protected:
@@ -151,8 +154,6 @@ public:
 	void CreateDispList();
 	void DeleteDispList();
 	void DeleteBuffers() {
-		vboIndices = {};
-		vboAttributes = {};
 		vboShatterIndices = {};
 	}
 
@@ -204,6 +205,7 @@ private:
 
 public:
 	std::string name;
+	const S3DModel* model;
 	std::vector<S3DModelPiece*> children;
 	std::array<S3DModelPiecePart, S3DModelPiecePart::SHATTER_VARIATIONS> shatterParts;
 
@@ -221,8 +223,13 @@ public:
 	float3 maxs = DEF_MAX_SIZE;
 
 protected:
-	VBO vboIndices;
-	VBO vboAttributes;
+
+	//VBO& vboIndices;
+	//VBO& vboAttributes;
+
+	uint32_t vertStartElem;
+	uint32_t vertStartIndx;
+
 	VBO vboShatterIndices;
 
 	unsigned int dispListID;
@@ -324,6 +331,9 @@ struct S3DModel
 
 	float3 CalcDrawMidPos() const { return ((maxs + mins) * 0.5f); }
 	float3 GetDrawMidPos() const { return relMidPos; }
+
+	virtual void BindVertexAttribVBOs() const = 0;
+	virtual void UnbindVertexAttribVBOs() const = 0;
 
 public:
 	std::string name;
