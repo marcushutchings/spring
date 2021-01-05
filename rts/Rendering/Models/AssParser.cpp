@@ -619,6 +619,7 @@ SAssPiece* CAssParser::LoadPiece(
 
 	SAssPiece* piece = AllocPiece();
 
+	piece->SetParentModel(model);
 	if (pieceNode->mParent == nullptr) {
 		// set the model's root piece ASAP, needed in SetPiece*Name
 		assert(pieceNode == scene->mRootNode);

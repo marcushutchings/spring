@@ -13,6 +13,7 @@
 #include "Sim/Misc/CollisionVolume.h"
 #include "System/Matrix44f.h"
 #include "System/type2.h"
+#include "System/SafeUtil.h"
 #include "System/creg/creg_cond.h"
 
 
@@ -88,7 +89,6 @@ public:
 
 struct S3DModelPiece {
 	S3DModelPiece() = default;
-	S3DModelPiece(const S3DModel* model_) : S3DModelPiece() { this->model = model_; };
 
 	// runs during global deinit, can not Clear() since that touches OpenGL
 	virtual ~S3DModelPiece() { assert(vboIndices.vboId == 0 && vboShatterIndices.vboId == 0); }
@@ -195,7 +195,7 @@ public:
 	      CollisionVolume* GetCollisionVolume()       { return &colvol; }
 
 	bool HasGeometryData() const { return (GetVertexDrawIndexCount() >= 3); }
-
+	void SetParentModel(const S3DModel* model_) { model = model_; }
 private:
 	void CreateShatterPiecesVariation(const int num);
 
@@ -246,7 +246,11 @@ struct S3DModel
 		, mins(DEF_MIN_SIZE)
 		, maxs(DEF_MAX_SIZE)
 		, relMidPos(ZeroVector)
+
+		, vertVBO(nullptr)
+		, indxVBO(nullptr)
 	{
+
 	}
 
 	S3DModel(const S3DModel& m) = delete;
@@ -285,6 +289,9 @@ struct S3DModel
 			piece->DrawStatic();
 		}
 	}
+
+	void BindVertexAttribVBOs() const;
+	void UnbindVertexAttribVBOs() const;
 
 	void SetPieceMatrices() { pieces[0]->SetPieceMatrix(CMatrix44f()); }
 	void DeletePieces() {
@@ -333,6 +340,9 @@ public:
 	int id;                     /// unsynced ID, starting with 1
 	int numPieces;
 	int textureType;            /// FIXME: MAKE S3O ONLY (0 = 3DO, otherwise S3O or ASSIMP)
+
+	VBO* vertVBO;
+	VBO* indxVBO;
 
 	ModelType type;
 

@@ -358,6 +358,7 @@ S3DOPiece* C3DOParser::LoadPiece(S3DModel* model, S3DOPiece* parent, const std::
 
 	S3DOPiece* piece = AllocPiece();
 
+	piece->SetParentModel(model);
 	piece->name = std::move(StringToLower(GET_TEXT(me.OffsetToObjectName, buf, curOffset)));
 	piece->parent = parent;
 	piece->offset.x =  me.XFromParent * SCALE_FACTOR_3DO;
