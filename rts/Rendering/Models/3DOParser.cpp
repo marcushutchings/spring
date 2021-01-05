@@ -4,7 +4,6 @@
 #include <cinttypes>
 
 #include "3DOParser.h"
-#include "ModelVBO.h"
 
 #include "Sim/Misc/CollisionVolume.h"
 #include "System/Exceptions.h"
@@ -402,6 +401,9 @@ void S3DOPiece::UploadGeometryVBOs()
 	if (prims.empty())
 		return;
 
+	std::vector<unsigned int>& indices = vertexIndices;
+	std::vector<SVertexData>& vertices = vertexAttribs;
+
 	// assume all faces are quads
 	indices.reserve(prims.size() * 6);
 	vertices.reserve(prims.size() * 4);
@@ -418,18 +420,18 @@ void S3DOPiece::UploadGeometryVBOs()
 			indices.push_back(vertices.size() + 0);
 			indices.push_back(vertices.size() + 2);
 			indices.push_back(vertices.size() + 3);
-			vertices.emplace_back(verts[ps.indices[0]], ps.vnormals[0], float2(tex->xstart, tex->ystart));
-			vertices.emplace_back(verts[ps.indices[1]], ps.vnormals[1], float2(tex->xend,   tex->ystart));
-			vertices.emplace_back(verts[ps.indices[2]], ps.vnormals[2], float2(tex->xend,   tex->yend));
-			vertices.emplace_back(verts[ps.indices[3]], ps.vnormals[3], float2(tex->xstart, tex->yend));
+			vertices.emplace_back(verts[ps.indices[0]], ps.vnormals[0], float3{}, float3{}, float2(tex->xstart, tex->ystart), float2{}, ps.pieceIndex);
+			vertices.emplace_back(verts[ps.indices[1]], ps.vnormals[1], float3{}, float3{}, float2(tex->xend,   tex->ystart), float2{}, ps.pieceIndex);
+			vertices.emplace_back(verts[ps.indices[2]], ps.vnormals[2], float3{}, float3{}, float2(tex->xend,   tex->yend),   float2{}, ps.pieceIndex);
+			vertices.emplace_back(verts[ps.indices[3]], ps.vnormals[3], float3{}, float3{}, float2(tex->xstart, tex->yend),   float2{}, ps.pieceIndex);
 		} else if (ps.indices.size() == 3) {
 			// triangle
 			indices.push_back(vertices.size() + 0);
 			indices.push_back(vertices.size() + 1);
 			indices.push_back(vertices.size() + 2);
-			vertices.emplace_back(verts[ps.indices[0]], ps.vnormals[0], float2(tex->xstart, tex->ystart));
-			vertices.emplace_back(verts[ps.indices[1]], ps.vnormals[1], float2(tex->xend,   tex->ystart));
-			vertices.emplace_back(verts[ps.indices[2]], ps.vnormals[2], float2(tex->xend,   tex->yend));
+			vertices.emplace_back(verts[ps.indices[0]], ps.vnormals[0], float3{}, float3{}, float2(tex->xstart, tex->ystart), float2{}, ps.pieceIndex);
+			vertices.emplace_back(verts[ps.indices[1]], ps.vnormals[1], float3{}, float3{}, float2(tex->xend,   tex->ystart), float2{}, ps.pieceIndex);
+			vertices.emplace_back(verts[ps.indices[2]], ps.vnormals[2], float3{}, float3{}, float2(tex->xend,   tex->yend),   float2{}, ps.pieceIndex);
 		} else if (ps.indices.size() >= 3) {
 			// fan
 			for (int i = 2; i < ps.indices.size(); ++i) {
@@ -438,20 +440,20 @@ void S3DOPiece::UploadGeometryVBOs()
 				indices.push_back(vertices.size() + i - 0);
 			}
 			for (int i = 0; i < ps.indices.size(); ++i) {
-				vertices.emplace_back(verts[ps.indices[i]], ps.vnormals[i], float2(tex->xstart, tex->ystart));
+				vertices.emplace_back(verts[ps.indices[i]], ps.vnormals[i], float3{}, float3{}, float2(tex->xstart, tex->ystart), float2{}, ps.pieceIndex);
 			}
 		}
 	}
 
-	{
-		auto& modelVBO = ModelVBO::GetInstance();
-		vertStartElem = modelVBO.GetVertexStartIndex<S3DOVertex>(model->id);
-		vertStartIndx = modelVBO.GetIndexStartIndex<S3DOVertex>(model->id);
-		modelVBO.UploadGeometryData<S3DOVertex>(model->id, vertices, indices);
-		vboAttributes = modelVBO.GetVertexVBO<S3DOVertex>(model->id);
-		vboIndices = modelVBO.GetIndexVBO<S3DOVertex>(model->id); !!!!!!!!!!
-	}
 
+	//FIXME share 1 VBO for ALL models
+	vboAttributes.Bind(GL_ARRAY_BUFFER);
+	vboAttributes.New(vertices.size() * sizeof(SVertexData), GL_STATIC_DRAW, &vertices[0]);
+	vboAttributes.Unbind();
+
+	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
+	vboIndices.New(indices.size() * sizeof(unsigned), GL_STATIC_DRAW, &indices[0]);
+	vboIndices.Unbind();
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();
@@ -461,21 +463,21 @@ void S3DOPiece::UploadGeometryVBOs()
 
 void S3DOPiece::BindVertexAttribVBOs() const
 {
-	ModelVBO::GetInstance().Bind(GL_ARRAY_BUFFER);
+	vboAttributes.Bind(GL_ARRAY_BUFFER);
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(S3DOVertex), vboAttributes.GetPtr(offsetof(S3DOVertex, pos)));
+		glVertexPointer(3, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, pos)));
 
 		glEnableClientState(GL_NORMAL_ARRAY);
-		glNormalPointer(GL_FLOAT, sizeof(S3DOVertex), vboAttributes.GetPtr(offsetof(S3DOVertex, normal)));
+		glNormalPointer(GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, normal)));
 
 		glClientActiveTexture(GL_TEXTURE1);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(S3DOVertex), vboAttributes.GetPtr(offsetof(S3DOVertex, texCoord)));
+		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, texCoords[0])));
 
 		glClientActiveTexture(GL_TEXTURE0);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(S3DOVertex), vboAttributes.GetPtr(offsetof(S3DOVertex, texCoord)));
-	ModelVBO::GetInstance().Unbind();
+		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, texCoords[0])));
+	vboAttributes.Unbind();
 }
 
 
@@ -499,7 +501,7 @@ void S3DOPiece::DrawForList() const
 
 	BindVertexAttribVBOs();
 	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	glDrawRangeElements(GL_TRIANGLES, 0, (vboAttributes.GetSize() - 1) / sizeof(S3DOVertex), vboIndices.GetSize() / sizeof(unsigned), GL_UNSIGNED_INT, vboIndices.GetPtr());
+	glDrawRangeElements(GL_TRIANGLES, 0, (vboAttributes.GetSize() - 1) / sizeof(SVertexData), vboIndices.GetSize() / sizeof(unsigned), GL_UNSIGNED_INT, vboIndices.GetPtr());
 	vboIndices.Unbind();
 	UnbindVertexAttribVBOs();
 }

@@ -15,14 +15,11 @@ enum {
 };
 
 
-using SS3OVertex = SVertexData;
-
-
 struct SS3OPiece: public S3DModelPiece {
 public:
-	SS3OPiece() = delete;
+	SS3OPiece() = default;
 	SS3OPiece(const SS3OPiece&) = delete;
-	SS3OPiece(SS3OPiece&& p) = default;
+	SS3OPiece(SS3OPiece&& p) { *this = std::move(p); }
 
 	SS3OPiece& operator = (const SS3OPiece& p) = delete;
 	SS3OPiece& operator = (SS3OPiece&& p) {
@@ -60,7 +57,7 @@ public:
 public:
 	void SetVertexCount(unsigned int n) { vertices.resize(n); }
 	void SetIndexCount(unsigned int n) { indices.resize(n); }
-	void SetVertex(int idx, const SS3OVertex& v) { vertices[idx] = v; }
+	void SetVertex(int idx, const SVertexData& v) { vertices[idx] = v; }
 	void SetIndex(int idx, const unsigned int drawIdx) { indices[idx] = drawIdx; }
 
 	void Trianglize();
@@ -68,7 +65,7 @@ public:
 	void SetVertexTangents();
 
 public:
-	std::vector<SS3OVertex> vertices;
+	std::vector<SVertexData> vertices;
 	std::vector<unsigned int> indices;
 
 	int primType = S3O_PRIMTYPE_TRIANGLES;

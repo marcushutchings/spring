@@ -7,7 +7,6 @@
 #include <array>
 #include <vector>
 #include <string>
-#include <cstdint>
 
 #include "Lua/LuaObjectMaterial.h"
 #include "Rendering/GL/VBO.h"
@@ -36,8 +35,6 @@ struct S3DModel;
 struct S3DModelPiece;
 struct LocalModel;
 struct LocalModelPiece;
-
-
 
 
 struct SVertexData {
@@ -71,12 +68,12 @@ struct S3DModelPiecePart {
 public:
 	struct RenderData {
 		float3 dir;
-		size_t vboOffset = 0;
-		size_t indexCount = 0;
+		size_t vboOffset;
+		size_t indexCount;
 	};
 
-	static constexpr int SHATTER_MAX_PARTS = 10;
-	static constexpr int SHATTER_VARIATIONS = 2;
+	static const int SHATTER_MAX_PARTS  = 10;
+	static const int SHATTER_VARIATIONS = 2;
 
 	std::vector<RenderData> renderData;
 };
@@ -90,11 +87,11 @@ public:
  */
 
 struct S3DModelPiece {
-	S3DModelPiece() = delete;
-	S3DModelPiece(const S3DModel* model) : model{model} {};
+	S3DModelPiece() = default;
+	S3DModelPiece(const S3DModel* model_) : S3DModelPiece() { this->model = model_; };
 
 	// runs during global deinit, can not Clear() since that touches OpenGL
-	virtual ~S3DModelPiece() { assert(vboShatterIndices.vboId == 0); }
+	virtual ~S3DModelPiece() { assert(vboIndices.vboId == 0 && vboShatterIndices.vboId == 0); }
 
 	virtual void Clear() {
 		name.clear();
@@ -107,7 +104,7 @@ struct S3DModelPiece {
 		parent = nullptr;
 		colvol = {};
 
-		bposeMatrix.LoadIdentity();
+		pieceMatrix.LoadIdentity();
 		bakedMatrix.LoadIdentity();
 
 		offset = ZeroVector;
@@ -121,7 +118,6 @@ struct S3DModelPiece {
 		DeleteBuffers();
 
 		hasBakedMat = false;
-		dummyPadding = false;
 	}
 
 	virtual float3 GetEmitPos() const;
@@ -140,9 +136,8 @@ struct S3DModelPiece {
 	void BindShatterIndexVBO() const { vboShatterIndices.Bind(GL_ELEMENT_ARRAY_BUFFER); }
 	void UnbindShatterIndexVBO() const { vboShatterIndices.Unbind(); }
 
-	//const VBO& GetIndexVBO() const { return vboIndices; }
-	//const VBO& GetAttribVBO() const { return vboAttributes; }
-
+	const VBO& GetIndexVBO() const { return vboIndices; }
+	const VBO& GetAttribVBO() const { return vboAttributes; }
 	const VBO& GetShatterIndexVBO() const { return vboShatterIndices; }
 
 protected:
@@ -154,6 +149,8 @@ public:
 	void CreateDispList();
 	void DeleteDispList();
 	void DeleteBuffers() {
+		vboIndices = {};
+		vboAttributes = {};
 		vboShatterIndices = {};
 	}
 
@@ -163,10 +160,10 @@ public:
 	void Shatter(float, int, int, int, const float3, const float3, const CMatrix44f&) const;
 
 	void SetPieceMatrix(const CMatrix44f& m) {
-		bposeMatrix = m * ComposeTransform(offset, ZeroVector, scales);
+		pieceMatrix = m * ComposeTransform(offset, ZeroVector, scales);
 
 		for (S3DModelPiece* c: children) {
-			c->SetPieceMatrix(bposeMatrix);
+			c->SetPieceMatrix(pieceMatrix);
 		}
 	}
 	void SetBakedMatrix(const CMatrix44f& m) {
@@ -197,7 +194,6 @@ public:
 	const CollisionVolume* GetCollisionVolume() const { return &colvol; }
 	      CollisionVolume* GetCollisionVolume()       { return &colvol; }
 
-	bool HasParent() const { return (parent != nullptr); }
 	bool HasGeometryData() const { return (GetVertexDrawIndexCount() >= 3); }
 
 private:
@@ -205,14 +201,13 @@ private:
 
 public:
 	std::string name;
-	const S3DModel* model;
 	std::vector<S3DModelPiece*> children;
 	std::array<S3DModelPiecePart, S3DModelPiecePart::SHATTER_VARIATIONS> shatterParts;
 
 	S3DModelPiece* parent = nullptr;
 	CollisionVolume colvol;
 
-	CMatrix44f bposeMatrix;      /// bind-pose transform, including baked rots
+	CMatrix44f pieceMatrix;      /// bind-pose transform, including baked rots
 	CMatrix44f bakedMatrix;      /// baked local-space rotations
 
 	float3 offset;               /// local (piece-space) offset wrt. parent piece
@@ -223,19 +218,15 @@ public:
 	float3 maxs = DEF_MAX_SIZE;
 
 protected:
-
-	//VBO& vboIndices;
-	//VBO& vboAttributes;
-
-	uint32_t vertStartElem;
-	uint32_t vertStartIndx;
-
+	VBO vboIndices;
+	VBO vboAttributes;
 	VBO vboShatterIndices;
+
+	const S3DModel* model;
 
 	unsigned int dispListID;
 
 	bool hasBakedMat;
-	bool dummyPadding;
 };
 
 
@@ -331,9 +322,6 @@ struct S3DModel
 
 	float3 CalcDrawMidPos() const { return ((maxs + mins) * 0.5f); }
 	float3 GetDrawMidPos() const { return relMidPos; }
-
-	virtual void BindVertexAttribVBOs() const = 0;
-	virtual void UnbindVertexAttribVBOs() const = 0;
 
 public:
 	std::string name;

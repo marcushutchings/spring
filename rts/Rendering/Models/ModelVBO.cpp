@@ -64,16 +64,16 @@ void ModelVBO::UploadGeometryData(const int32_t modelID, const TVertVec& vertVec
 	{ \
 		constexpr auto tSize = sizeof(T); \
 		\
-		vbo->Bind(); \
-		if (vbo->GetSize() < ((startIdx + dataVec.size()) * tSize)) { \
+		vbo.Bind(); \
+		if (vbo.GetSize() < ((startIdx + dataVec.size()) * tSize)) { \
 			const uint32_t newSize = (startIdx + std::max(dataVec.size(), counti)) * tSize; \
-			vbo->Resize(newSize, GL_STATIC_DRAW); \
+			vbo.Resize(newSize, GL_STATIC_DRAW); \
 		} \
 		\
-		const auto* memMap = vbo->MapBuffer(startIdx * tSize, dataVec.size() * tSize, GL_WRITE_ONLY); \
+		const auto* memMap = vbo.MapBuffer(startIdx * tSize, dataVec.size() * tSize, GL_WRITE_ONLY); \
 		memcpy(memMap, dataVec.data(), dataVec.size() * tSize); \
-		vbo->UnmapBuffer(); \
-		vbo->Unbind(); \
+		vbo.UnmapBuffer(); \
+		vbo.Unbind(); \
 	}
 
 	UPDATE_ITEM(TVertex, mvd.vertVBO, mvd.vertIndex, elemCount0, elemCounti, vertVec);

@@ -5,7 +5,6 @@
 
 #include "S3OParser.h"
 #include "s3o.h"
-#include "ModelVBO.h"
 #include "Game/GlobalUnsynced.h"
 #include "Rendering/GlobalRendering.h"
 #include "Rendering/Textures/S3OTextureHandler.h"
@@ -123,7 +122,7 @@ SS3OPiece* CS3OParser::LoadPiece(S3DModel* model, SS3OPiece* parent, std::vector
 		Vertex* v = vertexList++;
 		v->swap();
 
-		SS3OVertex sv;
+		SVertexData sv;
 		sv.pos = float3(v->xpos, v->ypos, v->zpos);
 		sv.normal = float3(v->xnormal, v->ynormal, v->znormal);
 
@@ -181,9 +180,14 @@ void SS3OPiece::UploadGeometryVBOs()
 	if (!HasGeometryData())
 		return;
 
-	vertStartElem = ModelVBO::GetInstance().GetVertexStartIndex<SS3OVertex>(model->id);
-	vertStartIndx = ModelVBO::GetInstance().GetIndexStartIndex<SS3OVertex>(model->id);
-	ModelVBO::GetInstance().UploadGeometryData<SS3OVertex>(model->id, vertices, indices);
+	//FIXME share 1 VBO for ALL models
+	vboAttributes.Bind(GL_ARRAY_BUFFER);
+	vboAttributes.New(vertices.size() * sizeof(SVertexData), GL_STATIC_DRAW, &vertices[0]);
+	vboAttributes.Unbind();
+
+	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
+	vboIndices.New(indices.size() * sizeof(unsigned int), GL_STATIC_DRAW, &indices[0]);
+	vboIndices.Unbind();
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();
@@ -194,26 +198,26 @@ void SS3OPiece::BindVertexAttribVBOs() const
 {
 	vboAttributes.Bind(GL_ARRAY_BUFFER);
 		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(SS3OVertex), vboAttributes.GetPtr(offsetof(SS3OVertex, pos)));
+		glVertexPointer(3, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, pos)));
 
 		glEnableClientState(GL_NORMAL_ARRAY);
-		glNormalPointer(GL_FLOAT, sizeof(SS3OVertex), vboAttributes.GetPtr(offsetof(SS3OVertex, normal)));
+		glNormalPointer(GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, normal)));
 
 		glClientActiveTexture(GL_TEXTURE0);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(SS3OVertex), vboAttributes.GetPtr(offsetof(SS3OVertex, texCoords[0])));
+		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, texCoords[0])));
 
 		glClientActiveTexture(GL_TEXTURE1);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(SS3OVertex), vboAttributes.GetPtr(offsetof(SS3OVertex, texCoords[1])));
+		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, texCoords[1])));
 
 		glClientActiveTexture(GL_TEXTURE5);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(3, GL_FLOAT, sizeof(SS3OVertex), vboAttributes.GetPtr(offsetof(SS3OVertex, sTangent)));
+		glTexCoordPointer(3, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, sTangent)));
 
 		glClientActiveTexture(GL_TEXTURE6);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(3, GL_FLOAT, sizeof(SS3OVertex), vboAttributes.GetPtr(offsetof(SS3OVertex, tTangent)));
+		glTexCoordPointer(3, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, tTangent)));
 	vboAttributes.Unbind();
 }
 
@@ -276,7 +280,7 @@ void SS3OPiece::DrawForList() const
 
 void SS3OPiece::SetMinMaxExtends()
 {
-	for (const SS3OVertex& v: vertices) {
+	for (const SVertexData& v: vertices) {
 		mins = float3::min(mins, v.pos);
 		maxs = float3::max(maxs, v.pos);
 	}
@@ -372,9 +376,9 @@ void SS3OPiece::SetVertexTangents()
 			i += 3; continue;
 		}
 
-		SS3OVertex& v0 = vertices[v0idx];
-		SS3OVertex& v1 = vertices[v1idx];
-		SS3OVertex& v2 = vertices[v2idx];
+		SVertexData& v0 = vertices[v0idx];
+		SVertexData& v1 = vertices[v1idx];
+		SVertexData& v2 = vertices[v2idx];
 
 		const float3& p0 = v0.pos;
 		const float3& p1 = v1.pos;

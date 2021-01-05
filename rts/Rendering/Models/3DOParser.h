@@ -45,17 +45,6 @@ namespace TA3DO {
 	} _Primitive;
 };
 
-struct S3DOVertex
-{
-	S3DOVertex(float3 p, float3 n, float2 t)
-	: pos(p), normal(n), texCoord(t) {}
-
-	float3 pos;
-	float3 normal;
-	float2 texCoord;
-};
-
-
 struct S3DOPrimitive
 {
 	std::vector<int>    indices;  ///< indices to S3DOPiece::verts
@@ -65,15 +54,18 @@ struct S3DOPrimitive
 	// used iff we have less than 3 or more than 4 vertices
 	float3 primNormal;
 
-	C3DOTextureHandler::UnitTexture* texture;
+	C3DOTextureHandler::UnitTexture* texture = nullptr;
+
+	// which piece this primitive belongs to
+	unsigned int pieceIndex = 0;
 };
 
 
 struct S3DOPiece: public S3DModelPiece
 {
-	S3DOPiece() = delete;
+	S3DOPiece() = default;
 	S3DOPiece(const S3DOPiece&) = delete;
-	S3DOPiece(S3DOPiece&& p) = default;
+	S3DOPiece(S3DOPiece&& p) { *this = std::move(p); }
 
 	S3DOPiece& operator = (const S3DOPiece& p) = delete;
 	S3DOPiece& operator = (S3DOPiece&& p) {
@@ -97,8 +89,8 @@ struct S3DOPiece: public S3DModelPiece
 		verts.clear();
 		prims.clear();
 
-		vertices.clear();
-		indices.clear();
+		vertexAttribs.clear();
+		vertexIndices.clear();
 
 		emitPos = ZeroVector;
 		emitDir = ZeroVector;
@@ -107,18 +99,17 @@ struct S3DOPiece: public S3DModelPiece
 	void UploadGeometryVBOs() override;
 	void DrawForList() const override;
 
-	unsigned int GetVertexCount() const override { return vertices.size(); }
-	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }
-	const float3& GetVertexPos(const int idx) const override { return vertices[idx].pos; }
-	const float3& GetNormal(const int idx)    const override { return vertices[idx].normal; }
-	const std::vector<unsigned>& GetVertexIndices() const override { return indices; }
+	unsigned int GetVertexCount() const override { return vboAttributes.GetSize(); }
+	unsigned int GetVertexDrawIndexCount() const override { return vboIndices.GetSize(); }
+	const float3& GetVertexPos(const int idx) const override { return vertexAttribs[idx].pos; }
+	const float3& GetNormal(const int idx)    const override { return vertexAttribs[idx].normal; }
+	const std::vector<unsigned>& GetVertexIndices() const override { return vertexIndices; }
 
 	float3 GetEmitPos() const override { return emitPos; }
 	float3 GetEmitDir() const override { return emitDir; }
 
 	void BindVertexAttribVBOs() const override;
 	void UnbindVertexAttribVBOs() const override;
-
 public:
 	void SetMinMaxExtends();
 	void CalcNormals();
@@ -145,8 +136,8 @@ public:
 	std::vector<float3> verts; //FIXME
 	std::vector<S3DOPrimitive> prims;
 
-	std::vector<S3DOVertex> vertices;
-	std::vector<unsigned int> indices;
+	std::vector<SVertexData> vertexAttribs;
+	std::vector<unsigned int> vertexIndices;
 
 	float3 emitPos;
 	float3 emitDir;

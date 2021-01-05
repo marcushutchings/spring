@@ -16,14 +16,11 @@ struct aiNode;
 struct aiScene;
 class LuaTable;
 
-using SAssVertex = SVertexData;
-
-
 struct SAssPiece: public S3DModelPiece
 {
-	SAssPiece() = delete;
+	SAssPiece() = default;
 	SAssPiece(const SAssPiece&) = delete;
-	SAssPiece(SAssPiece&& p) = default;
+	SAssPiece(SAssPiece&& p) { *this = std::move(p); }
 
 	SAssPiece& operator = (const SAssPiece& p) = delete;
 	SAssPiece& operator = (SAssPiece&& p) {
@@ -58,9 +55,8 @@ struct SAssPiece: public S3DModelPiece
 
 	unsigned int GetNumTexCoorChannels() const { return numTexCoorChannels; }
 	void SetNumTexCoorChannels(unsigned int n) { numTexCoorChannels = n; }
-
 public:
-	std::vector<SAssVertex> vertices;
+	std::vector<SVertexData> vertices;
 	std::vector<unsigned int> indices;
 
 	unsigned int numTexCoorChannels = 0;

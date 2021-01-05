@@ -69,7 +69,7 @@ void S3DModelPiece::DrawStatic() const
 		return;
 
 	glPushMatrix();
-	glMultMatrixf(bposeMatrix);
+	glMultMatrixf(pieceMatrix);
 	glCallList(dispListID);
 	glPopMatrix();
 }
