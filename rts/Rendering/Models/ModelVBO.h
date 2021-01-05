@@ -24,7 +24,13 @@ public:
 	void UploadGeometryData(const int32_t modelID, const TVertVec& vertVec, const TIndxVec& indxVec);
 
 	template <typename TVertex, typename TIndex>
-	std::pair<uint32_t, uint32_t> GetStartIndices(const int32_t modelID);
+	uint32_t GetStartIndex(const int32_t modelID);
+
+	template <typename TVertex, typename TIndex>
+	VBO* GetVertVBO(const int32_t modelID);
+
+	template <typename TVertex, typename TIndex>
+	VBO* GetIndxVBO(const int32_t modelID);
 private:
 	static constexpr uint32_t elemCount0 = 1 << 14u;
 	static constexpr uint32_t indxCount0 = 1 << 14u;
@@ -39,7 +45,7 @@ private:
 	};
 private:
 	static bool DoVBOPerModel() {
-		static bool doVBOPerModel = false;
+		static bool doVBOPerModel = true; //false is likely broken
 		return doVBOPerModel;
 	}
 	template <typename TVertex, typename TIndex>

@@ -42,7 +42,7 @@ public:
 		primType = S3O_PRIMTYPE_TRIANGLES;
 	}
 
-	void UploadGeometryVBOs() override;
+	void UploadGeometry() override;
 	void DrawForList() const override;
 
 	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }
@@ -50,9 +50,6 @@ public:
 	const float3& GetVertexPos(const int idx) const override { return vertices[idx].pos; }
 	const float3& GetNormal(const int idx) const override { return vertices[idx].normal; }
 	const std::vector<unsigned>& GetVertexIndices() const override { return indices; }
-
-	void BindVertexAttribVBOs() const override;
-	void UnbindVertexAttribVBOs() const override;
 
 public:
 	void SetVertexCount(unsigned int n) { vertices.resize(n); }
@@ -65,9 +62,6 @@ public:
 	void SetVertexTangents();
 
 public:
-	std::vector<SVertexData> vertices;
-	std::vector<unsigned int> indices;
-
 	int primType = S3O_PRIMTYPE_TRIANGLES;
 };
 

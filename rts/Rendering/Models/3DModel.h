@@ -91,7 +91,7 @@ struct S3DModelPiece {
 	S3DModelPiece() = default;
 
 	// runs during global deinit, can not Clear() since that touches OpenGL
-	virtual ~S3DModelPiece() { assert(vboIndices.vboId == 0 && vboShatterIndices.vboId == 0); }
+	virtual ~S3DModelPiece() { assert(vboShatterIndices.vboId == 0); }
 
 	virtual void Clear() {
 		name.clear();
@@ -124,37 +124,39 @@ struct S3DModelPiece {
 	virtual float3 GetEmitDir() const;
 
 	// internal use
-	virtual unsigned int GetVertexCount() const = 0;
-	virtual unsigned int GetVertexDrawIndexCount() const = 0;
+	virtual uint32_t GetVertexCount() const = 0;
+	virtual uint32_t GetVertexDrawIndexCount() const = 0;
 	virtual const float3& GetVertexPos(const int) const = 0;
 	virtual const float3& GetNormal(const int) const = 0;
 
-	virtual void UploadGeometryVBOs() = 0;
-	virtual void BindVertexAttribVBOs() const = 0;
-	virtual void UnbindVertexAttribVBOs() const = 0;
+	virtual void UploadGeometry();
+
+	void BindVertexAttribVBOs() const;
+	void UnbindVertexAttribVBOs() const;
+
+	void BindIndexVBO() const;
+	void UnbindIndexVBO() const;
+
+	void DrawElements(GLuint prim = GL_TRIANGLES) const;
 
 	void BindShatterIndexVBO() const { vboShatterIndices.Bind(GL_ELEMENT_ARRAY_BUFFER); }
 	void UnbindShatterIndexVBO() const { vboShatterIndices.Unbind(); }
 
-	const VBO& GetIndexVBO() const { return vboIndices; }
-	const VBO& GetAttribVBO() const { return vboAttributes; }
 	const VBO& GetShatterIndexVBO() const { return vboShatterIndices; }
 
 protected:
 	virtual void DrawForList() const = 0;
-	virtual const std::vector<unsigned>& GetVertexIndices() const = 0;
+	virtual const std::vector<uint32_t>& GetVertexIndices() const = 0;
 
 public:
 	void DrawStatic() const;
 	void CreateDispList();
 	void DeleteDispList();
 	void DeleteBuffers() {
-		vboIndices = {};
-		vboAttributes = {};
 		vboShatterIndices = {};
 	}
 
-	unsigned int GetDisplayListID() const { return dispListID; }
+	uint32_t GetDisplayListID() const { return dispListID; }
 
 	void CreateShatterPieces();
 	void Shatter(float, int, int, int, const float3, const float3, const CMatrix44f&) const;
@@ -218,15 +220,21 @@ public:
 	float3 maxs = DEF_MAX_SIZE;
 
 protected:
-	VBO vboIndices;
-	VBO vboAttributes;
+	uint32_t vboIndxStart = 0u;
+	uint32_t vboIndxEnd = 0u;
+
+	std::vector<SVertexData> vertices;
+	std::vector<uint32_t> indices;
+
 	VBO vboShatterIndices;
 
 	const S3DModel* model;
 
-	unsigned int dispListID;
+	uint32_t dispListID;
 
 	bool hasBakedMat;
+public:
+	friend class CAssParser;
 };
 
 
@@ -290,8 +298,18 @@ struct S3DModel
 		}
 	}
 
-	void BindVertexAttribVBOs() const;
-	void UnbindVertexAttribVBOs() const;
+	void BindVertexAttribs() const;
+	void UnbindVertexAttribs() const;
+
+	void BindIndexVBO() const;
+	void UnbindIndexVBO() const;
+
+	void BindVertexVBO() const;
+	void UnbindVertexVBO() const;
+
+	void DrawElements(GLenum prim, uint32_t vboIndxStart, uint32_t vboIndxEnd) const;
+
+	void UploadGeometry(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, uint32_t& indxStart, uint32_t& indxEnd) const;
 
 	void SetPieceMatrices() { pieces[0]->SetPieceMatrix(CMatrix44f()); }
 	void DeletePieces() {
@@ -341,8 +359,8 @@ public:
 	int numPieces;
 	int textureType;            /// FIXME: MAKE S3O ONLY (0 = 3DO, otherwise S3O or ASSIMP)
 
-	VBO* vertVBO;
-	VBO* indxVBO;
+	mutable VBO* vertVBO;
+	mutable VBO* indxVBO;
 
 	ModelType type;
 

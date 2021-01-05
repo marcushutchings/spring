@@ -42,9 +42,7 @@ struct SAssPiece: public S3DModelPiece
 	}
 
 	void DrawForList() const override;
-	void UploadGeometryVBOs() override;
-	void BindVertexAttribVBOs() const override;
-	void UnbindVertexAttribVBOs() const override;
+	void UploadGeometry() override;
 
 	unsigned int GetVertexCount() const override { return vertices.size(); }
 	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }
@@ -56,9 +54,6 @@ struct SAssPiece: public S3DModelPiece
 	unsigned int GetNumTexCoorChannels() const { return numTexCoorChannels; }
 	void SetNumTexCoorChannels(unsigned int n) { numTexCoorChannels = n; }
 public:
-	std::vector<SVertexData> vertices;
-	std::vector<unsigned int> indices;
-
 	unsigned int numTexCoorChannels = 0;
 };
 

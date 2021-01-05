@@ -1,6 +1,7 @@
 /* This file is part of the Spring engine (GPL v2 or later), see LICENSE.html */
 
 #include "3DModel.h"
+#include "ModelVBO.h"
 
 #include "Game/GlobalUnsynced.h"
 #include "Rendering/GL/myGL.h"
@@ -100,7 +101,7 @@ void S3DModelPiece::CreateShatterPieces()
 		return;
 
 	vboShatterIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	vboShatterIndices.Resize(S3DModelPiecePart::SHATTER_VARIATIONS * GetVertexIndices().size() * sizeof(unsigned int));
+	vboShatterIndices.Resize(S3DModelPiecePart::SHATTER_VARIATIONS * GetVertexIndices().size() * sizeof(uint32_t));
 
 	for (int i = 0; i < S3DModelPiecePart::SHATTER_VARIATIONS; ++i) {
 		CreateShatterPiecesVariation(i);
@@ -112,7 +113,7 @@ void S3DModelPiece::CreateShatterPieces()
 
 void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 {
-	typedef  std::pair<S3DModelPiecePart::RenderData, std::vector<unsigned> >  ShatterPartDataPair;
+	typedef  std::pair<S3DModelPiecePart::RenderData, std::vector<uint32_t> >  ShatterPartDataPair;
 	typedef  std::array< ShatterPartDataPair, S3DModelPiecePart::SHATTER_MAX_PARTS>  ShatterPartsBuffer;
 
 	// operate on a buffer; indices are not needed once VBO has been created
@@ -123,7 +124,7 @@ void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 	}
 
 	// helper
-	const std::vector<unsigned>& indices = GetVertexIndices();
+	const std::vector<uint32_t>& indices = GetVertexIndices();
 	const auto GetPolygonDir = [&](const size_t idx) -> float3
 	{
 		float3 midPos;
@@ -161,10 +162,10 @@ void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 
 	{
 		// fill the vertex index vbo
-		const size_t mapSize = indices.size() * sizeof(unsigned int);
+		const size_t mapSize = indices.size() * sizeof(uint32_t);
 		size_t vboPos = 0;
 
-		for (auto* vboMem = reinterpret_cast<unsigned char*>(vboShatterIndices.MapBuffer(num * mapSize, mapSize, GL_WRITE_ONLY)); vboMem != nullptr; vboMem = nullptr) {
+		for (auto* vboMem = vboShatterIndices.MapBuffer(num * mapSize, mapSize, GL_WRITE_ONLY); vboMem != nullptr; vboMem = nullptr) {
 			for (ShatterPartDataPair& cp: shatterPartsBuf) {
 				S3DModelPiecePart::RenderData& rd = cp.first;
 
@@ -172,8 +173,8 @@ void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 				rd.vboOffset  = num * mapSize + vboPos;
 
 				if (rd.indexCount > 0) {
-					memcpy(vboMem + vboPos, &(cp.second)[0], rd.indexCount * sizeof(unsigned int));
-					vboPos += (rd.indexCount * sizeof(unsigned int));
+					memcpy(vboMem + vboPos, &(cp.second)[0], rd.indexCount * sizeof(uint32_t));
+					vboPos += (rd.indexCount * sizeof(uint32_t));
 				}
 			}
 		}
@@ -217,6 +218,38 @@ void S3DModelPiece::Shatter(float pieceChance, int modelType, int texType, int t
 }
 
 
+void S3DModelPiece::UploadGeometry()
+{
+	assert(model);
+	model->UploadGeometry(vertices, indices, vboIndxStart, vboIndxEnd);
+}
+
+void S3DModelPiece::BindVertexAttribVBOs() const
+{
+	assert(model); model->BindVertexAttribs();
+}
+
+void S3DModelPiece::UnbindVertexAttribVBOs() const
+{
+	assert(model); model->UnbindVertexAttribs();
+}
+
+void S3DModelPiece::BindIndexVBO() const
+{
+	assert(model); model->BindIndexVBO();
+}
+
+void S3DModelPiece::UnbindIndexVBO() const
+{
+	assert(model); model->UnbindIndexVBO();
+}
+
+void S3DModelPiece::DrawElements(GLuint prim) const
+{
+	assert(model); model->DrawElements(prim, vboIndxStart, vboIndxEnd);
+}
+
+
 
 /** ****************************************************************************************************
  * LocalModel
@@ -229,7 +262,7 @@ void LocalModel::DrawPieces() const
 	}
 }
 
-void LocalModel::DrawPiecesLOD(unsigned int lod) const
+void LocalModel::DrawPiecesLOD(uint32_t lod) const
 {
 	if (!luaMaterialData.ValidLOD(lod))
 		return;
@@ -239,7 +272,7 @@ void LocalModel::DrawPiecesLOD(unsigned int lod) const
 	}
 }
 
-void LocalModel::SetLODCount(unsigned int lodCount)
+void LocalModel::SetLODCount(uint32_t lodCount)
 {
 	assert(Initialized());
 
@@ -356,35 +389,35 @@ void LocalModel::UpdateBoundingVolume()
 /** ****************************************************************************************************
  * S3DModel
  */
-void S3DModel::BindVertexAttribVBOs() const
+void S3DModel::BindVertexAttribs() const
 {
-	vertVBO->Bind(GL_ARRAY_BUFFER);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, pos)));
+	BindVertexVBO();
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, pos)));
 
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glNormalPointer(GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, normal)));
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glNormalPointer(GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, normal)));
 
-	glClientActiveTexture(GL_TEXTURE0);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, texCoords[0])));
+		glClientActiveTexture(GL_TEXTURE0);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, texCoords[0])));
 
-	glClientActiveTexture(GL_TEXTURE1);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, texCoords[1])));
+		glClientActiveTexture(GL_TEXTURE1);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, texCoords[1])));
 
-	glClientActiveTexture(GL_TEXTURE5);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(3, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, sTangent)));
+		glClientActiveTexture(GL_TEXTURE5);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(3, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, sTangent)));
 
-	glClientActiveTexture(GL_TEXTURE6);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(3, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, tTangent)));
-	vertVBO->Unbind();
+		glClientActiveTexture(GL_TEXTURE6);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(3, GL_FLOAT, sizeof(SVertexData), vertVBO->GetPtr(offsetof(SVertexData, tTangent)));
+	UnbindVertexVBO();
 }
 
 
-void S3DModel::UnbindVertexAttribVBOs() const
+void S3DModel::UnbindVertexAttribs() const
 {
 	glClientActiveTexture(GL_TEXTURE6);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -400,6 +433,50 @@ void S3DModel::UnbindVertexAttribVBOs() const
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
+}
+
+void S3DModel::BindIndexVBO() const
+{
+	if (indxVBO == nullptr) {
+		indxVBO = ModelVBO::GetInstance().GetIndxVBO<SVertexData, uint32_t>(id);
+	}
+	assert(indxVBO);
+	indxVBO->Bind(GL_ELEMENT_ARRAY_BUFFER);
+}
+
+void S3DModel::UnbindIndexVBO() const
+{
+	assert(indxVBO);
+	indxVBO->Unbind();
+}
+
+void S3DModel::BindVertexVBO() const
+{
+	if (vertVBO == nullptr) {
+		vertVBO = ModelVBO::GetInstance().GetVertVBO<SVertexData, uint32_t>(id);
+	}
+	assert(vertVBO);
+	vertVBO->Bind(GL_ARRAY_BUFFER);
+}
+
+void S3DModel::UnbindVertexVBO() const
+{
+	assert(vertVBO);
+	vertVBO->Unbind();
+}
+
+void S3DModel::DrawElements(GLenum prim, uint32_t vboIndxStart, uint32_t vboIndxEnd) const
+{
+	assert(indxVBO);
+	assert(vboIndxEnd - vboIndxStart > 0);
+	glDrawElements(prim, vboIndxEnd - vboIndxStart, GL_UNSIGNED_INT, indxVBO->GetPtr(vboIndxStart * sizeof(uint32_t)));
+}
+
+void S3DModel::UploadGeometry(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, uint32_t& indxStart, uint32_t& indxEnd) const
+{
+	indxStart = ModelVBO::GetInstance().GetStartIndex<SVertexData, uint32_t>(id);
+	ModelVBO::GetInstance().UploadGeometryData<SVertexData, uint32_t>(id, vertices, indices);
+	indxEnd = indxStart + indices.size();
 }
 
 /** ****************************************************************************************************
@@ -499,7 +576,7 @@ void LocalModelPiece::Draw() const
 	glPopMatrix();
 }
 
-void LocalModelPiece::DrawLOD(unsigned int lod) const
+void LocalModelPiece::DrawLOD(uint32_t lod) const
 {
 	if (!scriptSetVisible)
 		return;
@@ -512,12 +589,12 @@ void LocalModelPiece::DrawLOD(unsigned int lod) const
 
 
 
-void LocalModelPiece::SetLODCount(unsigned int count)
+void LocalModelPiece::SetLODCount(uint32_t count)
 {
 	// any new LOD's get null-lists first
 	lodDispLists.resize(count, 0);
 
-	for (unsigned int i = 0; i < children.size(); i++) {
+	for (uint32_t i = 0; i < children.size(); i++) {
 		children[i]->SetLODCount(count);
 	}
 }

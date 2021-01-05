@@ -24,7 +24,7 @@ uint64_t ModelVBO::GetIndex(const int32_t modelID)
 	return hashV << 32 | hashI;
 }
 
-template<typename TVertex, typename TIndex>
+template <typename TVertex, typename TIndex>
 ModelVBO::ModelVBOData& ModelVBO::GetMVD(const int32_t modelID)
 {
 	const auto idx = ModelVBO::GetIndex<TVertex, TIndex>(modelID);
@@ -49,10 +49,24 @@ ModelVBO::ModelVBOData& ModelVBO::GetMVD(const int32_t modelID)
 }
 
 template<typename TVertex, typename TIndex>
-std::pair<uint32_t, uint32_t> ModelVBO::GetStartIndices(const int32_t modelID)
+uint32_t ModelVBO::GetStartIndex(const int32_t modelID)
 {
 	ModelVBO::ModelVBOData& mvd = GetMVD<TVertex, TIndex>(modelID);
-	return std::make_pair(mvd.vertIndex, mvd.indxIndex);
+	return mvd.indxIndex;
+}
+
+template<typename TVertex, typename TIndex>
+VBO* ModelVBO::GetVertVBO(const int32_t modelID)
+{
+	ModelVBO::ModelVBOData& mvd = GetMVD<TVertex, TIndex>(modelID);
+	return &mvd.vertVBO;
+}
+
+template<typename TVertex, typename TIndex>
+VBO* ModelVBO::GetIndxVBO(const int32_t modelID)
+{
+	ModelVBO::ModelVBOData& mvd = GetMVD<TVertex, TIndex>(modelID);
+	return &mvd.indxVBO;
 }
 
 template<typename TVertex, typename TIndex, typename TVertVec, typename TIndxVec>
@@ -74,6 +88,8 @@ void ModelVBO::UploadGeometryData(const int32_t modelID, const TVertVec& vertVec
 		memcpy(memMap, dataVec.data(), dataVec.size() * tSize); \
 		vbo.UnmapBuffer(); \
 		vbo.Unbind(); \
+		\
+		startIdx += dataVec.size(); \
 	}
 
 	UPDATE_ITEM(TVertex, mvd.vertVBO, mvd.vertIndex, elemCount0, elemCounti, vertVec);

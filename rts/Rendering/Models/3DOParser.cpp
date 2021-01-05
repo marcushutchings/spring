@@ -396,14 +396,11 @@ S3DOPiece* C3DOParser::LoadPiece(S3DModel* model, S3DOPiece* parent, const std::
 }
 
 
-void S3DOPiece::UploadGeometryVBOs()
+void S3DOPiece::UploadGeometry()
 {
 	// cannot use HasGeometryData because vboIndices is still empty
 	if (prims.empty())
 		return;
-
-	std::vector<unsigned int>& indices = vertexIndices;
-	std::vector<SVertexData>& vertices = vertexAttribs;
 
 	// assume all faces are quads
 	indices.reserve(prims.size() * 6);
@@ -446,54 +443,12 @@ void S3DOPiece::UploadGeometryVBOs()
 		}
 	}
 
-
-	//FIXME share 1 VBO for ALL models
-	vboAttributes.Bind(GL_ARRAY_BUFFER);
-	vboAttributes.New(vertices.size() * sizeof(SVertexData), GL_STATIC_DRAW, &vertices[0]);
-	vboAttributes.Unbind();
-
-	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	vboIndices.New(indices.size() * sizeof(unsigned), GL_STATIC_DRAW, &indices[0]);
-	vboIndices.Unbind();
+	S3DModelPiece::UploadGeometry();
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();
 	// indices.clear();
 }
-
-
-void S3DOPiece::BindVertexAttribVBOs() const
-{
-	vboAttributes.Bind(GL_ARRAY_BUFFER);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, pos)));
-
-		glEnableClientState(GL_NORMAL_ARRAY);
-		glNormalPointer(GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, normal)));
-
-		glClientActiveTexture(GL_TEXTURE1);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, texCoords[0])));
-
-		glClientActiveTexture(GL_TEXTURE0);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(SVertexData), vboAttributes.GetPtr(offsetof(SVertexData, texCoords[0])));
-	vboAttributes.Unbind();
-}
-
-
-void S3DOPiece::UnbindVertexAttribVBOs() const
-{
-	glClientActiveTexture(GL_TEXTURE1);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glClientActiveTexture(GL_TEXTURE0);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-}
-
 
 void S3DOPiece::DrawForList() const
 {
@@ -501,9 +456,9 @@ void S3DOPiece::DrawForList() const
 		return;
 
 	BindVertexAttribVBOs();
-	vboIndices.Bind(GL_ELEMENT_ARRAY_BUFFER);
-	glDrawRangeElements(GL_TRIANGLES, 0, (vboAttributes.GetSize() - 1) / sizeof(SVertexData), vboIndices.GetSize() / sizeof(unsigned), GL_UNSIGNED_INT, vboIndices.GetPtr());
-	vboIndices.Unbind();
+	BindIndexVBO();
+		DrawElements(GL_TRIANGLES);
+	UnbindIndexVBO();
 	UnbindVertexAttribVBOs();
 }
 

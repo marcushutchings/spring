@@ -377,8 +377,11 @@ void CModelLoader::CreateLists(S3DModel* model) {
 		return;
 
 	for (S3DModelPiece* p: model->pieces) {
-		p->UploadGeometryVBOs();
+		p->UploadGeometry();
 		p->CreateShatterPieces();
+	}
+
+	for (S3DModelPiece* p : model->pieces) {
 		p->CreateDispList();
 	}
 

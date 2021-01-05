@@ -77,8 +77,8 @@ struct S3DOPiece: public S3DModelPiece
 		verts = std::move(p.verts);
 		prims = std::move(p.prims);
 
-		vertexAttribs = std::move(p.vertexAttribs);
-		vertexIndices = std::move(p.vertexIndices);
+		vertices = std::move(p.vertexAttribs);
+		indices = std::move(p.vertexIndices);
 		#endif
 		return *this;
 	}
@@ -89,27 +89,25 @@ struct S3DOPiece: public S3DModelPiece
 		verts.clear();
 		prims.clear();
 
-		vertexAttribs.clear();
-		vertexIndices.clear();
+		vertices.clear();
+		indices.clear();
 
 		emitPos = ZeroVector;
 		emitDir = ZeroVector;
 	}
 
-	void UploadGeometryVBOs() override;
+	void UploadGeometry() override;
 	void DrawForList() const override;
 
-	unsigned int GetVertexCount() const override { return vboAttributes.GetSize(); }
-	unsigned int GetVertexDrawIndexCount() const override { return vboIndices.GetSize(); }
-	const float3& GetVertexPos(const int idx) const override { return vertexAttribs[idx].pos; }
-	const float3& GetNormal(const int idx)    const override { return vertexAttribs[idx].normal; }
-	const std::vector<unsigned>& GetVertexIndices() const override { return vertexIndices; }
+	unsigned int GetVertexCount() const override { return vertices.size(); }
+	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }
+	const float3& GetVertexPos(const int idx) const override { return vertices[idx].pos; }
+	const float3& GetNormal(const int idx)    const override { return vertices[idx].normal; }
+	const std::vector<unsigned>& GetVertexIndices() const override { return indices; }
 
 	float3 GetEmitPos() const override { return emitPos; }
 	float3 GetEmitDir() const override { return emitDir; }
 
-	void BindVertexAttribVBOs() const override;
-	void UnbindVertexAttribVBOs() const override;
 public:
 	void SetMinMaxExtends();
 	void CalcNormals();
@@ -135,9 +133,6 @@ public:
 public:
 	std::vector<float3> verts; //FIXME
 	std::vector<S3DOPrimitive> prims;
-
-	std::vector<SVertexData> vertexAttribs;
-	std::vector<unsigned int> vertexIndices;
 
 	float3 emitPos;
 	float3 emitDir;
