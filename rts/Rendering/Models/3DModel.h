@@ -124,8 +124,8 @@ struct S3DModelPiece {
 	virtual float3 GetEmitDir() const;
 
 	// internal use
-	virtual uint32_t GetVertexCount() const = 0;
-	virtual uint32_t GetVertexDrawIndexCount() const = 0;
+	uint32_t GetVertexCount() const { return vertices.size();  }
+	uint32_t GetVertexDrawIndexCount() const { return indices.size(); }
 	virtual const float3& GetVertexPos(const int) const = 0;
 	virtual const float3& GetNormal(const int) const = 0;
 
@@ -147,7 +147,6 @@ struct S3DModelPiece {
 
 protected:
 	virtual void DrawForList() const = 0;
-	virtual const std::vector<uint32_t>& GetVertexIndices() const = 0;
 public:
 	void DrawStatic() const;
 	void CreateDispList();
@@ -199,9 +198,6 @@ public:
 	bool HasGeometryData() const { return (GetVertexDrawIndexCount() >= 3); }
 	void SetParentModel(S3DModel* model_) { model = model_; }
 
-	const std::vector<SVertexData>& GetVertexData() const { return vertices; }
-	const std::vector<uint32_t>& GetIndexData() const { return indices; }
-
 private:
 	void CreateShatterPiecesVariation(const int num);
 
@@ -225,11 +221,11 @@ public:
 
 protected:
 	uint32_t vboIndxStart = 0u;
-	uint32_t vboIndxEnd = 0u;
+	uint32_t vboVertStart = 0u;
 
 	std::vector<SVertexData> vertices;
 	std::vector<uint32_t> indices;
-	std::vector<uint32_t> indicesVBO; //used only to upload to VBO with shifted indices
+	std::vector<uint32_t> indicesVBO; //used only to upload to VBO with shifted indices, cleared after
 
 	VBO vboShatterIndices;
 
@@ -312,7 +308,7 @@ struct S3DModel
 		}
 	}
 
-	void CreateVBOs(const uint32_t vertCount, const uint32_t indxCount);
+	void CreateVBOs();
 
 	void BindVertexAttribs() const;
 	void UnbindVertexAttribs() const;
@@ -325,7 +321,7 @@ struct S3DModel
 
 	void DrawElements(GLenum prim, uint32_t vboIndxStart, uint32_t vboIndxEnd) const;
 
-	void UploadToVBO(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, uint32_t& indxStart, uint32_t& indxEnd);
+	void UploadToVBO(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, const uint32_t vertStart, const uint32_t indxStart) const;
 
 	void SetPieceMatrices() { pieces[0]->SetPieceMatrix(CMatrix44f()); }
 	void DeletePieces() {

@@ -377,17 +377,17 @@ void CModelLoader::CreateLists(S3DModel* model) {
 		return;
 
 	LOG("CModelLoader::%s %p", __func__, model);
-	uint32_t vertCount = 0u;
-	uint32_t indxCount = 0u;
+	model->curVertStartIndx = 0u;
+	model->curIndxStartIndx = 0u;
 	for (S3DModelPiece* p: model->pieces) {
 		p->SetParentModel(model); //not the best place to do it, but otherwise I used to hit racing conditions
 		p->PostProcessGeometry();
 		p->CreateShatterPieces();
-		vertCount += p->GetVertexData().size();
-		indxCount += p->GetIndexData().size();
+		model->curVertStartIndx += p->GetVertexCount();
+		model->curIndxStartIndx += p->GetVertexDrawIndexCount();
 	}
 
-	model->CreateVBOs(vertCount, indxCount);
+	model->CreateVBOs();
 	for (S3DModelPiece* p : model->pieces) {
 		p->UploadToVBO();
 		//p->CreateDispList();
