@@ -94,7 +94,6 @@ set(sources_engine_Rendering
 		"${CMAKE_CURRENT_SOURCE_DIR}/Models/AssParser.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Models/IModelParser.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Models/S3OParser.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/Models/ModelVBO.hpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Screenshot.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Shaders/GLSLCopyState.cpp"
 		"${CMAKE_CURRENT_SOURCE_DIR}/Shaders/LuaShaderContainer.cpp"

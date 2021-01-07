@@ -42,7 +42,6 @@ struct SAssPiece: public S3DModelPiece
 	}
 
 	void DrawForList() const override;
-	void UploadGeometry() override;
 
 	unsigned int GetVertexCount() const override { return vertices.size(); }
 	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }

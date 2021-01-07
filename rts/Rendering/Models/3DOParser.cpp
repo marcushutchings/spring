@@ -358,7 +358,6 @@ S3DOPiece* C3DOParser::LoadPiece(S3DModel* model, S3DOPiece* parent, const std::
 
 	S3DOPiece* piece = AllocPiece();
 
-	piece->SetParentModel(model);
 	piece->name = std::move(StringToLower(GET_TEXT(me.OffsetToObjectName, buf, curOffset)));
 	piece->parent = parent;
 	piece->offset.x =  me.XFromParent * SCALE_FACTOR_3DO;
@@ -396,7 +395,7 @@ S3DOPiece* C3DOParser::LoadPiece(S3DModel* model, S3DOPiece* parent, const std::
 }
 
 
-void S3DOPiece::UploadGeometry()
+void S3DOPiece::PostProcessGeometry()
 {
 	// cannot use HasGeometryData because vboIndices is still empty
 	if (prims.empty())
@@ -443,7 +442,7 @@ void S3DOPiece::UploadGeometry()
 		}
 	}
 
-	S3DModelPiece::UploadGeometry();
+	S3DModelPiece::PostProcessGeometry();
 
 	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
 	// vertices.clear();

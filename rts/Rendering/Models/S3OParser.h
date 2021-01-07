@@ -42,7 +42,6 @@ public:
 		primType = S3O_PRIMTYPE_TRIANGLES;
 	}
 
-	void UploadGeometry() override;
 	void DrawForList() const override;
 
 	unsigned int GetVertexDrawIndexCount() const override { return indices.size(); }

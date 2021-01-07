@@ -96,7 +96,7 @@ struct S3DOPiece: public S3DModelPiece
 		emitDir = ZeroVector;
 	}
 
-	void UploadGeometry() override;
+	void PostProcessGeometry() override;
 	void DrawForList() const override;
 
 	unsigned int GetVertexCount() const override { return vertices.size(); }

@@ -619,7 +619,6 @@ SAssPiece* CAssParser::LoadPiece(
 
 	SAssPiece* piece = AllocPiece();
 
-	piece->SetParentModel(model);
 	if (pieceNode->mParent == nullptr) {
 		// set the model's root piece ASAP, needed in SetPiece*Name
 		assert(pieceNode == scene->mRootNode);
@@ -822,19 +821,6 @@ void CAssParser::FindTextures(
 	// 3. try to load from metafile (highest priority)
 	model->texs[0] = FindTexture(modelTable.GetString("tex1", ""), modelPath, model->texs[0]);
 	model->texs[1] = FindTexture(modelTable.GetString("tex2", ""), modelPath, model->texs[1]);
-}
-
-
-void SAssPiece::UploadGeometry()
-{
-	if (!HasGeometryData())
-		return;
-
-	S3DModelPiece::UploadGeometry();
-
-	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
-	// vertices.clear();
-	// indices.clear();
 }
 
 void SAssPiece::DrawForList() const

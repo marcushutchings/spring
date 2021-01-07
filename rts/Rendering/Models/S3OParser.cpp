@@ -109,7 +109,6 @@ SS3OPiece* CS3OParser::LoadPiece(S3DModel* model, SS3OPiece* parent, std::vector
 	// create piece
 	SS3OPiece* piece = AllocPiece();
 
-	piece->SetParentModel(model);
 	piece->offset.x = fp->xoffset;
 	piece->offset.y = fp->yoffset;
 	piece->offset.z = fp->zoffset;
@@ -169,23 +168,6 @@ SS3OPiece* CS3OParser::LoadPiece(S3DModel* model, SS3OPiece* parent, std::vector
 	}
 
 	return piece;
-}
-
-
-
-
-
-
-void SS3OPiece::UploadGeometry()
-{
-	if (!HasGeometryData())
-		return;
-
-	S3DModelPiece::UploadGeometry();
-
-	// NOTE: wasteful to keep these around, but still needed (eg. for Shatter())
-	// vertices.clear();
-	// indices.clear();
 }
 
 void SS3OPiece::DrawForList() const

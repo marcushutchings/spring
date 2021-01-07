@@ -129,7 +129,8 @@ struct S3DModelPiece {
 	virtual const float3& GetVertexPos(const int) const = 0;
 	virtual const float3& GetNormal(const int) const = 0;
 
-	virtual void UploadGeometry();
+	virtual void PostProcessGeometry();
+	void UploadToVBO();
 
 	void BindVertexAttribVBOs() const;
 	void UnbindVertexAttribVBOs() const;
@@ -147,7 +148,6 @@ struct S3DModelPiece {
 protected:
 	virtual void DrawForList() const = 0;
 	virtual const std::vector<uint32_t>& GetVertexIndices() const = 0;
-
 public:
 	void DrawStatic() const;
 	void CreateDispList();
@@ -197,7 +197,11 @@ public:
 	      CollisionVolume* GetCollisionVolume()       { return &colvol; }
 
 	bool HasGeometryData() const { return (GetVertexDrawIndexCount() >= 3); }
-	void SetParentModel(const S3DModel* model_) { model = model_; }
+	void SetParentModel(S3DModel* model_) { model = model_; }
+
+	const std::vector<SVertexData>& GetVertexData() const { return vertices; }
+	const std::vector<uint32_t>& GetIndexData() const { return indices; }
+
 private:
 	void CreateShatterPiecesVariation(const int num);
 
@@ -225,10 +229,11 @@ protected:
 
 	std::vector<SVertexData> vertices;
 	std::vector<uint32_t> indices;
+	std::vector<uint32_t> indicesVBO; //used only to upload to VBO with shifted indices
 
 	VBO vboShatterIndices;
 
-	const S3DModel* model;
+	S3DModel* model;
 
 	uint32_t dispListID;
 
@@ -257,6 +262,9 @@ struct S3DModel
 
 		, vertVBO(nullptr)
 		, indxVBO(nullptr)
+
+		, curVertStartIndx(0u)
+		, curIndxStartIndx(0u)
 	{
 
 	}
@@ -283,6 +291,12 @@ struct S3DModel
 		maxs = m.maxs;
 		relMidPos = m.relMidPos;
 
+		vertVBO = std::move(m.vertVBO);
+		indxVBO = std::move(m.indxVBO);
+
+		curVertStartIndx = m.curVertStartIndx;
+		curIndxStartIndx = m.curIndxStartIndx;
+
 		pieces = std::move(m.pieces);
 		return *this;
 	}
@@ -298,6 +312,8 @@ struct S3DModel
 		}
 	}
 
+	void CreateVBOs(const uint32_t vertCount, const uint32_t indxCount);
+
 	void BindVertexAttribs() const;
 	void UnbindVertexAttribs() const;
 
@@ -309,7 +325,7 @@ struct S3DModel
 
 	void DrawElements(GLenum prim, uint32_t vboIndxStart, uint32_t vboIndxEnd) const;
 
-	void UploadGeometry(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, uint32_t& indxStart, uint32_t& indxEnd) const;
+	void UploadToVBO(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, uint32_t& indxStart, uint32_t& indxEnd);
 
 	void SetPieceMatrices() { pieces[0]->SetPieceMatrix(CMatrix44f()); }
 	void DeletePieces() {
@@ -359,8 +375,11 @@ public:
 	int numPieces;
 	int textureType;            /// FIXME: MAKE S3O ONLY (0 = 3DO, otherwise S3O or ASSIMP)
 
-	mutable VBO* vertVBO;
-	mutable VBO* indxVBO;
+	std::unique_ptr<VBO> vertVBO;
+	std::unique_ptr<VBO> indxVBO;
+
+	uint32_t curVertStartIndx;
+	uint32_t curIndxStartIndx;
 
 	ModelType type;
 
