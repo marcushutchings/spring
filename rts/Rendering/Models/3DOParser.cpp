@@ -360,6 +360,7 @@ S3DOPiece* C3DOParser::LoadPiece(S3DModel* model, S3DOPiece* parent, const std::
 
 	piece->name = std::move(StringToLower(GET_TEXT(me.OffsetToObjectName, buf, curOffset)));
 	piece->parent = parent;
+	piece->SetParentModel(model);
 	piece->offset.x =  me.XFromParent * SCALE_FACTOR_3DO;
 	piece->offset.y =  me.YFromParent * SCALE_FACTOR_3DO;
 	piece->offset.z = -me.ZFromParent * SCALE_FACTOR_3DO;

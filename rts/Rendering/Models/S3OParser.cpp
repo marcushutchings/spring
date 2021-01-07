@@ -115,6 +115,7 @@ SS3OPiece* CS3OParser::LoadPiece(S3DModel* model, SS3OPiece* parent, std::vector
 	piece->primType = fp->primitiveType;
 	piece->name = (char*) &buf[fp->name];
 	piece->parent = parent;
+	piece->SetParentModel(model);
 
 	// retrieve vertices
 	piece->SetVertexCount(fp->numVertices);

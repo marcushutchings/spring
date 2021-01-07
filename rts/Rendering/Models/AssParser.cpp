@@ -626,6 +626,7 @@ SAssPiece* CAssParser::LoadPiece(
 	}
 
 	SetPieceName(piece, model, pieceNode, pieceMap);
+	piece->SetParentModel(model);
 
 	LOG_SL(LOG_SECTION_PIECE, L_INFO, "Converting node '%s' to piece '%s' (%d meshes).", pieceNode->mName.data, piece->name.c_str(), pieceNode->mNumMeshes);
 

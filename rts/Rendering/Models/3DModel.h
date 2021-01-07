@@ -225,7 +225,7 @@ protected:
 
 	std::vector<SVertexData> vertices;
 	std::vector<uint32_t> indices;
-	std::vector<uint32_t> indicesVBO; //used only to upload to VBO with shifted indices, cleared after
+	std::vector<uint32_t> indicesVBO; //used only to upload to VBO with shifted indices
 
 	VBO vboShatterIndices;
 
@@ -294,6 +294,7 @@ struct S3DModel
 		curIndxStartIndx = m.curIndxStartIndx;
 
 		pieces = std::move(m.pieces);
+		for_each(pieces.begin(), pieces.end(), [this](S3DModelPiece* p) { p->SetParentModel(this); });
 		return *this;
 	}
 

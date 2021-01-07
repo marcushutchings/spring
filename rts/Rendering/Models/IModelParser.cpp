@@ -376,11 +376,9 @@ void CModelLoader::CreateLists(S3DModel* model) {
 	if (rootPiece->GetDisplayListID() != 0)
 		return;
 
-	LOG("CModelLoader::%s %p", __func__, model);
 	model->curVertStartIndx = 0u;
 	model->curIndxStartIndx = 0u;
 	for (S3DModelPiece* p: model->pieces) {
-		p->SetParentModel(model); //not the best place to do it, but otherwise I used to hit racing conditions
 		p->PostProcessGeometry();
 		p->CreateShatterPieces();
 		model->curVertStartIndx += p->GetVertexCount();

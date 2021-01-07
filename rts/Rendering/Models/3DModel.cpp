@@ -153,9 +153,9 @@ void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 			mcp = &cp;
 		}
 
-		(mcp->second).push_back(indices[i + 0]);
-		(mcp->second).push_back(indices[i + 1]);
-		(mcp->second).push_back(indices[i + 2]);
+		(mcp->second).push_back(indicesVBO[i + 0]);
+		(mcp->second).push_back(indicesVBO[i + 1]);
+		(mcp->second).push_back(indicesVBO[i + 2]);
 	}
 
 	{
@@ -226,10 +226,6 @@ void S3DModelPiece::PostProcessGeometry()
 
 	indicesVBO.resize(indices.size());
 	std::transform(indices.cbegin(), indices.cend(), indicesVBO.begin(), [this](uint32_t indx) { return indx + this->vboVertStart; });
-	//LOG("S3DModelPiece::%s %p %u %u %u", __func__, model, static_cast<uint32_t>(vertices.size()), static_cast<uint32_t>(indices.size()), static_cast<uint32_t>(indicesVBO.size()));
-
-	//if (indices.size() > 0)
-		//LOG("S3DModelPiece::%s vboVertStart=%u indices[0]=%u indicesVBO[0]=%u", __func__, vboVertStart, indices[0], indicesVBO[0]);
 }
 
 void S3DModelPiece::UploadToVBO()
@@ -239,7 +235,6 @@ void S3DModelPiece::UploadToVBO()
 
 	assert(model);
 	model->UploadToVBO(vertices, indicesVBO, vboVertStart, vboIndxStart);
-	indicesVBO.clear();
 }
 
 void S3DModelPiece::BindVertexAttribVBOs() const
