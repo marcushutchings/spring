@@ -9,8 +9,6 @@
 #include "System/Exceptions.h"
 #include "System/SafeUtil.h"
 
-#include "System/Log/ILog.h"
-
 #include <algorithm>
 #include <cctype>
 #include <cstring>
@@ -239,39 +237,38 @@ void S3DModelPiece::UploadToVBO()
 	if (!HasGeometryData())
 		return;
 
-	//assert(model);
+	assert(model);
 	model->UploadToVBO(vertices, indicesVBO, vboVertStart, vboIndxStart);
 	indicesVBO.clear();
 }
 
 void S3DModelPiece::BindVertexAttribVBOs() const
 {
-	//assert(model);
+	assert(model);
 	model->BindVertexAttribs();
 }
 
 void S3DModelPiece::UnbindVertexAttribVBOs() const
 {
-	//assert(model);
+	assert(model);
 	model->UnbindVertexAttribs();
 }
 
 void S3DModelPiece::BindIndexVBO() const
 {
-	//assert(model);
+	assert(model);
 	model->BindIndexVBO();
 }
 
 void S3DModelPiece::UnbindIndexVBO() const
 {
-	//assert(model);
+	assert(model);
 	model->UnbindIndexVBO();
 }
 
 void S3DModelPiece::DrawElements(GLuint prim) const
 {
-	//LOG("S3DModelPiece::%s %u, %u, %u, %p", __func__, prim, vboIndxStart, static_cast<uint32_t>(vboIndxStart + indices.size()), model);
-	//assert(model);
+	assert(model);
 	model->DrawElements(prim, vboIndxStart, vboIndxStart + indices.size());
 }
 
@@ -420,14 +417,12 @@ void S3DModel::CreateVBOs()
 		vertVBO->New(curVertStartIndx * sizeof(SVertexData), GL_STATIC_DRAW, nullptr);
 		vertVBO->Unbind();
 	}
-	//LOG("S3DModel::%s %s %p %p %u %u", __func__, "vertVBO", this, vertVBO.get(), curVertStartIndx, static_cast<uint32_t>(vertVBO->GetSize()));
 	{
 		indxVBO = std::make_unique<VBO>(GL_ELEMENT_ARRAY_BUFFER, false);
 		indxVBO->Bind();
 		indxVBO->New(curIndxStartIndx * sizeof(uint32_t), GL_STATIC_DRAW, nullptr);
 		indxVBO->Unbind();
 	}
-	//LOG("S3DModel::%s %s %p %p %u %u", __func__, "indxVBO", this, indxVBO.get(), curIndxStartIndx, static_cast<uint32_t>(indxVBO->GetSize()));
 }
 
 /** ****************************************************************************************************
@@ -486,7 +481,7 @@ void S3DModel::BindIndexVBO() const
 
 void S3DModel::UnbindIndexVBO() const
 {
-	//assert(indxVBO);
+	assert(indxVBO);
 	indxVBO->Unbind();
 }
 
@@ -502,31 +497,25 @@ void S3DModel::UnbindVertexVBO() const
 
 void S3DModel::DrawElements(GLenum prim, uint32_t vboIndxStart, uint32_t vboIndxEnd) const
 {
-	//assert(vboIndxEnd - vboIndxStart > 0);
-	//LOG("S3DModel::%s %u, %u, %u, %p", __func__, prim, vboIndxEnd - vboIndxStart, static_cast<uint32_t>(vboIndxStart * sizeof(uint32_t)), indxVBO->GetPtr(vboIndxStart * sizeof(uint32_t)));
+	assert(vboIndxEnd - vboIndxStart > 0);
 	glDrawElements(prim, vboIndxEnd - vboIndxStart, GL_UNSIGNED_INT, indxVBO->GetPtr(vboIndxStart * sizeof(uint32_t)));
 }
 
 void S3DModel::UploadToVBO(const std::vector<SVertexData>& vertices, const std::vector<uint32_t>& indices, const uint32_t vertStart, const uint32_t indxStart) const
 {
 	{
-		//LOG("S3DModel::%s %s %p %p %u %u", __func__, "vertVBO", this, vertVBO.get(), static_cast<uint32_t>(vertVBO->GetSize()), static_cast<uint32_t>(vertices.size()));
 		vertVBO->Bind();
 		auto* map = vertVBO->MapBuffer(vertStart * sizeof(SVertexData), vertices.size() * sizeof(SVertexData), GL_WRITE_ONLY);
-		//LOG("S3DModel::%s map vertStart=%u %u %u %p %p", __func__, vertStart, static_cast<uint32_t>(vertStart * sizeof(SVertexData)), static_cast<uint32_t>(vertices.size() * sizeof(SVertexData)), map, vertices.data());
 		memcpy(map, vertices.data(), vertices.size() * sizeof(SVertexData));
 		vertVBO->UnmapBuffer();
 		vertVBO->Unbind();
 	}
 	{
-		//LOG("S3DModel::%s %s %p indxStart=%u %p %u %u", __func__, "indxVBO", this, indxStart, indxVBO.get(), static_cast<uint32_t>(indxVBO->GetSize()), static_cast<uint32_t>(indices.size()));
 		indxVBO->Bind();
 		auto* map = indxVBO->MapBuffer(indxStart * sizeof(uint32_t), indices.size() * sizeof(uint32_t), GL_WRITE_ONLY);
 		memcpy(map, indices.data(), indices.size() * sizeof(uint32_t));
 		indxVBO->UnmapBuffer();
 		indxVBO->Unbind();
-
-		//LOG("S3DModel::%s %s indxEnd=%u", __func__, "indxVBO2", static_cast<uint32_t>(indxStart + indices.size()));
 	}
 
 }
