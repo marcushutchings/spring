@@ -21,9 +21,9 @@
 
 #include "LuaUtils.h"
 
-LuaVBOImpl::LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt, lua_State* L_):
+LuaVBOImpl::LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt):
 	defTarget{defTargetOpt.value_or(GL_ARRAY_BUFFER)}, freqUpdated{freqUpdatedOpt.value_or(false)},
-	elemSizeInBytes{0u}, elementsCount{0u}, bufferSizeInBytes{0u}, attributesCount{0u}, L{L_}
+	elemSizeInBytes{0u}, elementsCount{0u}, bufferSizeInBytes{0u}, attributesCount{0u}
 {
 
 }
@@ -373,7 +373,7 @@ bool LuaVBOImpl::DefineElementArray(const sol::optional<sol::object> attribDefAr
 void LuaVBOImpl::Define(const int elementsCount, const sol::optional<sol::object> attribDefArgOpt)
 {
 	if (vbo) {
-		LuaError("[LuaVBOImpl::%s] Attempt to call %s multiple times. VBO definition is immutable.", __func__);
+		LuaError("[LuaVBOImpl::%s] Attempt to call %s() multiple times. VBO definition is immutable.", __func__, __func__);
 	}
 
 	if (elementsCount <= 0) {
@@ -417,10 +417,19 @@ void LuaVBOImpl::Define(const int elementsCount, const sol::optional<sol::object
 	AllocGLBuffer(elemSizeInBytes * elementsCount);
 }
 
+std::tuple<uint32_t, uint32_t, uint32_t> LuaVBOImpl::GetBufferSize()
+{
+	return std::make_tuple(
+		elementsCount,
+		bufferSizeInBytes,
+		static_cast<uint32_t>(vbo != nullptr ? vbo->GetSize() : 0u)
+	);
+}
+
 size_t LuaVBOImpl::Upload(const sol::stack_table& luaTblData, const sol::optional<int> elemOffsetOpt, const sol::optional<int> attribIdxOpt)
 {
 	if (!vbo) {
-		LuaError("[LuaVBOImpl::%s] Invalid VBO. Did you call :Define()?", __func__);
+		LuaError("[LuaVBOImpl::%s] Invalid VBO. Did you call :Define() or :FromUnitDefID/FromFeatureDefID()?", __func__);
 	}
 
 	const uint32_t elemOffset = static_cast<uint32_t>(std::max(elemOffsetOpt.value_or(0), 0));
@@ -931,7 +940,6 @@ bool LuaVBOImpl::TransformAndRead(int& bytesRead, GLubyte*& mappedBuf, const int
 template<typename ...Args>
 void LuaVBOImpl::LuaError(const std::string& format, Args ...args)
 {
-	//luaL_error(*reinterpret_cast<sol::this_state*>(L), fmt::sprintf(format, args...).c_str());
-	//luaL_error(*reinterpret_cast<sol::this_state*>(L), format.c_str(), args...);
-	luaL_error(L, "Blabla %s", "blabla");
+	std::string what = fmt::sprintf(format, args...);
+	throw std::runtime_error(what.c_str());
 }

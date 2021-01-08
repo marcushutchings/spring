@@ -18,8 +18,7 @@ struct LuaVBOImpl;
 
 class LuaVAOImpl {
 public:
-	LuaVAOImpl() = delete;
-	LuaVAOImpl(lua_State* L_);
+	LuaVAOImpl();
 
 	LuaVAOImpl(const LuaVAOImpl& lva) = delete; //no copy cons
 	LuaVAOImpl(LuaVAOImpl&& lva) = default; //move cons
@@ -43,8 +42,6 @@ private:
 private:
 	template <typename... Args>
 	void LuaError(std::string format, Args... args);
-private:
-	lua_State* L;
 private:
 	VAO* vao = nullptr;
 

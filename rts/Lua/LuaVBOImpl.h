@@ -19,7 +19,7 @@ struct LuaVAOImpl;
 class LuaVBOImpl {
 public:
 	LuaVBOImpl() = delete;
-	LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt, lua_State* L_);
+	LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt);
 	LuaVBOImpl(const LuaVBOImpl&) = delete; //no copy cons
 	LuaVBOImpl(LuaVBOImpl&&) = default; //move cons
 
@@ -27,6 +27,7 @@ public:
 	void Delete();
 
 	void Define(const int elementsCount, const sol::optional<sol::object> attribDefArgOpt);
+	std::tuple<uint32_t, uint32_t, uint32_t> GetBufferSize();
 
 	size_t Upload(const sol::stack_table& luaTblData, const sol::optional<int> elemOffsetOpt, const sol::optional<int> attribIdxOpt);
 	sol::as_table_t<std::vector<lua_Number>> Download(const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<int> attribIdxOpt);
@@ -109,8 +110,6 @@ private:
 	static constexpr GLenum DEFAULT_VERT_ATTR_TYPE = GL_FLOAT;
 	static constexpr GLenum DEFAULT_BUFF_ATTR_TYPE = GL_FLOAT_VEC4;
 	static constexpr GLenum DEFAULT_INDX_ATTR_TYPE = GL_UNSIGNED_SHORT;
-private:
-	lua_State* L;
 };
 
 

@@ -22,9 +22,8 @@
 
 #include "LuaUtils.h"
 
-LuaVAOImpl::LuaVAOImpl(lua_State* L_)
-	: L{L_}
-	, vertLuaVBO{nullptr}
+LuaVAOImpl::LuaVAOImpl()
+	: vertLuaVBO{nullptr}
 	, instLuaVBO{nullptr}
 	, indxLuaVBO{nullptr}
 {
@@ -108,7 +107,8 @@ void LuaVAOImpl::AttachIndexBuffer(const std::shared_ptr<LuaVBOImpl>& luaVBO)
 template<typename ...Args>
 void LuaVAOImpl::LuaError(std::string format, Args ...args)
 {
-	luaL_error(L, fmt::sprintf(format, args...).c_str());
+	std::string what = fmt::sprintf(format, args...);
+	throw std::runtime_error(what.c_str());
 }
 
 void LuaVAOImpl::CheckDrawPrimitiveType(GLenum mode)
