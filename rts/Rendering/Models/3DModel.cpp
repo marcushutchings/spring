@@ -153,9 +153,9 @@ void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 			mcp = &cp;
 		}
 
-		(mcp->second).push_back(indicesVBO[i + 0] + vboVertStart);
-		(mcp->second).push_back(indicesVBO[i + 1] + vboVertStart);
-		(mcp->second).push_back(indicesVBO[i + 2] + vboVertStart);
+		(mcp->second).push_back(indices[i + 0] + vboVertStart);
+		(mcp->second).push_back(indices[i + 1] + vboVertStart);
+		(mcp->second).push_back(indices[i + 2] + vboVertStart);
 	}
 
 	{
@@ -235,6 +235,8 @@ void S3DModelPiece::UploadToVBO()
 
 	assert(model);
 	model->UploadToVBO(vertices, indicesVBO, vboVertStart, vboIndxStart);
+
+	indicesVBO.clear(); //no longer needed
 }
 
 void S3DModelPiece::BindVertexAttribVBOs() const
