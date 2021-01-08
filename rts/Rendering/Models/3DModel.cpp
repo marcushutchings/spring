@@ -153,9 +153,9 @@ void S3DModelPiece::CreateShatterPiecesVariation(const int num)
 			mcp = &cp;
 		}
 
-		(mcp->second).push_back(indicesVBO[i + 0]);
-		(mcp->second).push_back(indicesVBO[i + 1]);
-		(mcp->second).push_back(indicesVBO[i + 2]);
+		(mcp->second).push_back(indicesVBO[i + 0] + vboVertStart);
+		(mcp->second).push_back(indicesVBO[i + 1] + vboVertStart);
+		(mcp->second).push_back(indicesVBO[i + 2] + vboVertStart);
 	}
 
 	{
