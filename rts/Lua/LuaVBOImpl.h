@@ -35,6 +35,9 @@ public:
 	size_t Upload(const sol::stack_table& luaTblData, const sol::optional<int> elemOffsetOpt, const sol::optional<int> attribIdxOpt);
 	sol::as_table_t<std::vector<lua_Number>> Download(const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<int> attribIdxOpt);
 
+	size_t FromUnitDefID(const int id);
+	size_t FromFeatureDefID(const int id);
+
 	int BindBufferRange  (const GLuint index, const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<GLenum> targetOpt);
 	int UnbindBufferRange(const GLuint index, const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<GLenum> targetOpt);
 
@@ -55,8 +58,11 @@ private:
 	bool FillAttribsNumberImpl(const int numVec4Attribs);
 	bool DefineElementArray(const sol::optional<sol::object> attribDefArgOpt);
 private:
-	template <typename... Args>
+	template<typename... Args>
 	void LuaError(std::string format, Args... args);
+
+	template<typename TObj>
+	size_t FromDefIDImpl(const int defID);
 
 	template<typename T>
 	static T MaybeFunc(const sol::table& tbl, const std::string& key, T defValue);
@@ -91,6 +97,7 @@ private:
 	uint32_t bufferSizeInBytes;
 
 	VBO* vbo = nullptr;
+	bool vboOwner;
 
 	std::vector<std::pair<const int, const BufferAttribDef>> bufferAttribDefsVec;
 	std::map<const int, BufferAttribDef> bufferAttribDefs;

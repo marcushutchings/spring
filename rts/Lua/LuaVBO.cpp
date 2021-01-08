@@ -26,6 +26,9 @@ bool LuaVBO::PushEntries(lua_State* L)
 		"Upload", &LuaVBOImpl::Upload,
 		"Download", &LuaVBOImpl::Download,
 
+		"FromUnitDefID", &LuaVBOImpl::FromUnitDefID,
+		"FromFeatureDefID", &LuaVBOImpl::FromFeatureDefID,
+
 		"BindBufferRange", &LuaVBOImpl::BindBufferRange,
 		"UnbindBufferRange", &LuaVBOImpl::UnbindBufferRange,
 

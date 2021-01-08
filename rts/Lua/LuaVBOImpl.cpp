@@ -12,6 +12,12 @@
 #include "System/SpringMath.h"
 #include "System/SafeUtil.h"
 #include "Rendering/GL/VBO.h"
+#include "Sim/Objects/SolidObjectDef.h"
+#include "Sim/Features/FeatureDef.h"
+#include "Sim/Features/FeatureDefHandler.h"
+#include "Sim/Units/UnitDef.h"
+#include "Sim/Units/UnitDefHandler.h"
+
 
 #include "LuaUtils.h"
 
@@ -31,8 +37,11 @@ LuaVBOImpl::~LuaVBOImpl()
 void LuaVBOImpl::Delete()
 {
 	//safe to call multiple times
-	spring::SafeDestruct(vbo);
+	if (vboOwner)
+		spring::SafeDestruct(vbo);
+
 	bufferAttribDefs.clear();
+	bufferAttribDefsVec.clear();
 }
 
 /////////////////////////////////
@@ -356,6 +365,8 @@ bool LuaVBOImpl::DefineElementArray(const sol::optional<sol::object> attribDefAr
 		static_cast<GLsizei>(elemSizeInBytes) // strideSizeInBytes
 	};
 
+	attributesCount = 1;
+
 	return true;
 }
 
@@ -613,6 +624,165 @@ sol::as_table_t<std::vector<lua_Number>> LuaVBOImpl::Download(const sol::optiona
 	return sol::as_table(dataVec);
 }
 
+/*
+	float3 pos;
+	float3 normal = UpVector;
+	float3 sTangent;
+	float3 tTangent;
+
+	// TODO:
+	//   with pieceIndex this struct is no longer 64 bytes in size which ATI's prefer
+	//   support an arbitrary number of channels, would be easy but overkill (for now)
+	float2 texCoords[NUM_MODEL_UVCHANNS];
+
+	uint32_t pieceIndex = 0;
+*/
+
+template<typename TObj>
+size_t LuaVBOImpl::FromDefIDImpl(const int defID)
+{
+	const auto engineVertAttribDefFunc = [this]() {
+		// float3 pos
+		this->bufferAttribDefs[0] = {
+			GL_FLOAT, //type
+			3, //size
+			GL_FALSE, //normalized
+			"pos", //name
+			offsetof(SVertexData, pos), //pointer
+			sizeof(float), //typeSizeInBytes
+			3 * sizeof(float) //strideSizeInBytes
+		};
+
+		// float3 normal
+		this->bufferAttribDefs[1] = {
+			GL_FLOAT, //type
+			3, //size
+			GL_FALSE, //normalized
+			"normal", //name
+			offsetof(SVertexData, normal), //pointer
+			sizeof(float), //typeSizeInBytes
+			3 * sizeof(float) //strideSizeInBytes
+		};
+
+		// float3 sTangent
+		this->bufferAttribDefs[2] = {
+			GL_FLOAT, //type
+			3, //size
+			GL_FALSE, //normalized
+			"sTangent", //name
+			offsetof(SVertexData, sTangent), //pointer
+			sizeof(float), //typeSizeInBytes
+			3 * sizeof(float) //strideSizeInBytes
+		};
+
+		// float3 tTangent
+		this->bufferAttribDefs[3] = {
+			GL_FLOAT, //type
+			3, //size
+			GL_FALSE, //normalized
+			"tTangent", //name
+			offsetof(SVertexData, tTangent), //pointer
+			sizeof(float), //typeSizeInBytes
+			3 * sizeof(float) //strideSizeInBytes
+		};
+
+		// 2 x float2 texCoords
+		this->bufferAttribDefs[4] = {
+			GL_FLOAT, //type
+			4, //size
+			GL_FALSE, //normalized
+			"texCoords", //name
+			offsetof(SVertexData, texCoords[0]), //pointer
+			sizeof(float), //typeSizeInBytes
+			4 * sizeof(float) //strideSizeInBytes
+		};
+
+		// uint32_t pieceIndex
+		this->bufferAttribDefs[5] = {
+			GL_UNSIGNED_INT, //type
+			1, //size
+			GL_FALSE, //normalized
+			"pieceIndex", //name
+			offsetof(SVertexData, pieceIndex), //pointer
+			sizeof(uint32_t), //typeSizeInBytes
+			1 * sizeof(uint32_t) //strideSizeInBytes
+		};
+
+		this->attributesCount = 6;
+		this->elemSizeInBytes = sizeof(SVertexData);
+		this->bufferSizeInBytes = vbo->GetSize();
+		this->elementsCount = this->bufferSizeInBytes / this->elemSizeInBytes;
+	};
+
+	const auto engineIndxAttribDefFunc = [this]() {
+		// float3 pos
+		this->bufferAttribDefs[0] = {
+			GL_UNSIGNED_INT, //type
+			1, //size
+			GL_FALSE, //normalized
+			"index", //name
+			0, //pointer
+			sizeof(uint32_t), //typeSizeInBytes
+			1 * sizeof(uint32_t) //strideSizeInBytes
+		};
+
+		this->attributesCount = 1;
+		this->elemSizeInBytes = sizeof(uint32_t);
+		this->bufferSizeInBytes = vbo->GetSize();
+		this->elementsCount = this->bufferSizeInBytes / this->elemSizeInBytes;
+	};
+
+	const SolidObjectDef* objDef;
+	if constexpr (std::is_same<TObj, UnitDef>::value)
+		objDef = unitDefHandler->GetUnitDefByID(defID);
+
+	if constexpr (std::is_same<TObj, FeatureDef>::value)
+		objDef = featureDefHandler->GetFeatureDefByID(defID);
+
+	if (objDef == nullptr)
+		LuaError("[LuaVBOImpl::%s] Supplied invalid objectDefID [%u]", __func__, defID);
+
+	const S3DModel* model = objDef->LoadModel();
+	if (model == nullptr)
+		LuaError("[LuaVBOImpl::%s] failed to load model for objectDefID [%u]", __func__, defID);
+
+	switch (defTarget) {
+	case GL_ARRAY_BUFFER: {
+		vbo = model->vertVBO.get(); //hack but should be fine
+		if (vbo == nullptr)
+			LuaError("[LuaVBOImpl::%s] Vertex VBO for objectDefID [%u] is unexpectedly nullptr", __func__, defID);
+
+		engineVertAttribDefFunc();
+	} break;
+	case GL_ELEMENT_ARRAY_BUFFER: {
+		vbo = model->indxVBO.get(); //hack but should be fine
+		if (vbo == nullptr)
+			LuaError("[LuaVBOImpl::%s] Index VBO for objectDefID [%u] is unexpectedly nullptr", __func__, defID);
+
+		engineIndxAttribDefFunc();
+	} break;
+	default:
+		LuaError("[LuaVBOImpl::%s] Invalid buffer target [%u]", __func__, defTarget);
+	}
+
+	CopyAttrMapToVec();
+
+	vboOwner = false;
+
+	return bufferSizeInBytes;
+}
+
+
+size_t LuaVBOImpl::FromUnitDefID(const int id)
+{
+	return FromDefIDImpl<UnitDef>(id);
+}
+
+size_t LuaVBOImpl::FromFeatureDefID(const int id)
+{
+	return FromDefIDImpl<FeatureDef>(id);
+}
+
 int LuaVBOImpl::BindBufferRangeImpl(const GLuint index,  const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<GLenum> targetOpt, const bool bind)
 {
 	if (!vbo) {
@@ -693,7 +863,7 @@ void LuaVBOImpl::DumpDefinition()
 
 void LuaVBOImpl::AllocGLBuffer(size_t byteSize)
 {
-	if (defTarget == GL_UNIFORM_BUFFER && bufferSizeInBytes > BUFFER_SANE_LIMIT_BYTES) {
+	if (defTarget == GL_UNIFORM_BUFFER && bufferSizeInBytes > UBO_SAFE_SIZE_BYTES) {
 		LuaError("[LuaVBOImpl::%s] Exceeded [%u] safe UBO buffer size limit of [%u] bytes", __func__, bufferSizeInBytes, LuaVBOImpl::UBO_SAFE_SIZE_BYTES);
 	}
 
@@ -707,6 +877,8 @@ void LuaVBOImpl::AllocGLBuffer(size_t byteSize)
 	vbo->Bind();
 	vbo->New(byteSize, freqUpdated ? GL_STREAM_DRAW : GL_STATIC_DRAW);
 	vbo->Unbind();
+
+	vboOwner = true;
 }
 
 // Allow for a ~magnitude faster loops than other the map
