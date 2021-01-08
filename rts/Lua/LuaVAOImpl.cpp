@@ -7,7 +7,7 @@
 
 #include "lib/sol2/sol.hpp"
 
-#if 0
+#if 1
 #include "System/Log/ILog.h"
 //			LOG("%s, %f, %p, %d, %d", attr.name.c_str(), *iter, mappedBuf, outValSize, bytesWritten);
 #endif
@@ -22,9 +22,13 @@
 
 #include "LuaUtils.h"
 
-LuaVAOImpl::LuaVAOImpl(sol::this_state L_)
+LuaVAOImpl::LuaVAOImpl(lua_State* L_)
+	: L{L_}
+	, vertLuaVBO{nullptr}
+	, instLuaVBO{nullptr}
+	, indxLuaVBO{nullptr}
 {
-	memcpy(&L[0], &L_, std::min(sizeof(sol::this_state_container), sizeof(sol::this_state)));
+
 }
 
 void LuaVAOImpl::Delete()
@@ -59,29 +63,31 @@ bool LuaVAOImpl::Supported()
 
 void LuaVAOImpl::AttachBufferImpl(const std::shared_ptr<LuaVBOImpl>& luaVBO, std::shared_ptr<LuaVBOImpl>& thisLuaVBO, GLenum reqTarget)
 {
+	LOG("%s %d", __func__, 1);
 	if (thisLuaVBO) {
 		LuaError("[LuaVAOImpl::%s] LuaVBO already attached", __func__);
 	}
-
+	LOG("%s %d", __func__, 2);
 	if (luaVBO->defTarget != reqTarget) {
 		LuaError("[LuaVAOImpl::%s] LuaVBO should have been created with [%u] target, got [%u] target instead", __func__, reqTarget, luaVBO->defTarget);
 	}
-
+	LOG("%s %d", __func__, 3);
 	if (!luaVBO->vbo) {
 		LuaError("[LuaVAOImpl::%s] LuaVBO is invalid. Did you sucessfully call vbo:Define()?", __func__);
 	}
-
-	for (const auto& kv : luaVBO->bufferAttribDefsVec) {
-		if (vertLuaVBO && vertLuaVBO->bufferAttribDefs.find(kv.first) != vertLuaVBO->bufferAttribDefs.cend()) {
-			LuaError("[LuaVAOImpl::%s] LuaVBO attached as [%s] has defined a duplicate attribute [%d]", __func__, "vertex buffer", kv.first);
-		}
-
-		if (instLuaVBO && instLuaVBO->bufferAttribDefs.find(kv.first) != instLuaVBO->bufferAttribDefs.cend()) {
-			LuaError("[LuaVAOImpl::%s] LuaVBO attached as [%s] has defined a duplicate attribute [%d]", __func__, "instance buffer", kv.first);
-		}
-	}
+	LOG("%s %d", __func__, 4);
 
 	thisLuaVBO = luaVBO;
+
+	if (vertLuaVBO && instLuaVBO) {
+		for (const auto& v : vertLuaVBO->bufferAttribDefs) {
+			for (const auto& i : instLuaVBO->bufferAttribDefs) {
+				if (v.first == i.first) {
+					LuaError("[LuaVAOImpl::%s] Vertex and Instance LuaVBO have defined a duplicate attribute [%d]", __func__, v.first);
+				}
+			}
+		}
+	}
 }
 
 void LuaVAOImpl::AttachVertexBuffer(const std::shared_ptr<LuaVBOImpl>& luaVBO)
@@ -102,7 +108,7 @@ void LuaVAOImpl::AttachIndexBuffer(const std::shared_ptr<LuaVBOImpl>& luaVBO)
 template<typename ...Args>
 void LuaVAOImpl::LuaError(std::string format, Args ...args)
 {
-	luaL_error(*reinterpret_cast<sol::this_state*>(L), fmt::sprintf(format, args...).c_str());
+	luaL_error(L, fmt::sprintf(format, args...).c_str());
 }
 
 void LuaVAOImpl::CheckDrawPrimitiveType(GLenum mode)

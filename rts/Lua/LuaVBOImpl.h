@@ -8,6 +8,7 @@
 #include <string>
 
 #include "lib/lua/include/lua.h" //for lua_Number
+//#include "lib/sol2/forward.hpp"
 #include "lib/sol2/forward.hpp"
 
 #include "Rendering/GL/myGL.h"
@@ -15,15 +16,10 @@
 struct VBO;
 struct LuaVAOImpl;
 
-// Workaround to continue using lib/sol2/forward.hpp
-namespace sol {
-	using this_state_container = unsigned char[sizeof(void*)]; //enough room to hold a pointer
-}
-
 class LuaVBOImpl {
 public:
 	LuaVBOImpl() = delete;
-	LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt, sol::this_state L_);
+	LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt, lua_State* L_);
 	LuaVBOImpl(const LuaVBOImpl&) = delete; //no copy cons
 	LuaVBOImpl(LuaVBOImpl&&) = default; //move cons
 
@@ -59,7 +55,7 @@ private:
 	bool DefineElementArray(const sol::optional<sol::object> attribDefArgOpt);
 private:
 	template<typename... Args>
-	void LuaError(std::string format, Args... args);
+	void LuaError(const std::string& format, Args... args);
 
 	template<typename TObj>
 	size_t FromDefIDImpl(const int defID);
@@ -114,7 +110,7 @@ private:
 	static constexpr GLenum DEFAULT_BUFF_ATTR_TYPE = GL_FLOAT_VEC4;
 	static constexpr GLenum DEFAULT_INDX_ATTR_TYPE = GL_UNSIGNED_SHORT;
 private:
-	sol::this_state_container L;
+	lua_State* L;
 };
 
 

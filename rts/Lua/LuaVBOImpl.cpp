@@ -21,11 +21,11 @@
 
 #include "LuaUtils.h"
 
-LuaVBOImpl::LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt, sol::this_state L_):
+LuaVBOImpl::LuaVBOImpl(const sol::optional<GLenum> defTargetOpt, const sol::optional<bool> freqUpdatedOpt, lua_State* L_):
 	defTarget{defTargetOpt.value_or(GL_ARRAY_BUFFER)}, freqUpdated{freqUpdatedOpt.value_or(false)},
-	elemSizeInBytes{0u}, elementsCount{0u}, bufferSizeInBytes{0u}, attributesCount{0u}
+	elemSizeInBytes{0u}, elementsCount{0u}, bufferSizeInBytes{0u}, attributesCount{0u}, L{L_}
 {
-	memcpy(&L[0], &L_, std::min(sizeof(sol::this_state_container), sizeof(sol::this_state)));
+
 }
 
 LuaVBOImpl::~LuaVBOImpl()
@@ -447,31 +447,6 @@ size_t LuaVBOImpl::Upload(const sol::stack_table& luaTblData, const sol::optiona
 	vbo->Bind();
 	const int mappedBufferSizeInBytes = bufferSizeInBytes - bufferOffsetInBytes;
 	auto mappedBuf = vbo->MapBuffer(bufferOffsetInBytes, mappedBufferSizeInBytes, GL_MAP_WRITE_BIT);
-
-	/*
-	#define TRANSFORM_COPY_ATTRIB(outT, sz, iter, mcpy) \
-	{ \
-		constexpr int outValSize = sizeof(outT); \
-		const int outValSizeStride = sz * outValSize; \
-		if (bytesWritten + outValSizeStride > mappedBufferSizeInBytes) { \
-			vbo->UnmapBuffer(); \
-			vbo->Unbind(); \
-			LuaError("[LuaVBOImpl::%s] Upload array contains too much data", __func__); \
-			return bytesWritten; \
-		} \
-		if (mcpy) { \
-			for (int n = 0; n < sz; ++n) { \
-				const auto outVal = TransformFunc<lua_Number, outT>(*iter); \
-				memcpy(mappedBuf, &outVal, outValSize); \
-				mappedBuf += outValSize; \
-				++iter; \
-			} \
-		} else { \
-			mappedBuf += outValSizeStride; \
-		} \
-		bytesWritten += outValSizeStride; \
-	}
-	*/
 
 	int bytesWritten = 0;
 	for (auto bdvIter = dataVec.cbegin(); bdvIter < dataVec.cend(); ) {
@@ -954,7 +929,9 @@ bool LuaVBOImpl::TransformAndRead(int& bytesRead, GLubyte*& mappedBuf, const int
 }
 
 template<typename ...Args>
-void LuaVBOImpl::LuaError(std::string format, Args ...args)
+void LuaVBOImpl::LuaError(const std::string& format, Args ...args)
 {
-	luaL_error(*reinterpret_cast<sol::this_state*>(L), fmt::sprintf(format, args...).c_str());
+	//luaL_error(*reinterpret_cast<sol::this_state*>(L), fmt::sprintf(format, args...).c_str());
+	//luaL_error(*reinterpret_cast<sol::this_state*>(L), format.c_str(), args...);
+	luaL_error(L, "Blabla %s", "blabla");
 }
