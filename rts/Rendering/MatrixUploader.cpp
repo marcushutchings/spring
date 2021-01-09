@@ -114,7 +114,6 @@ void MatrixUploader::GetVisibleObjects(std::unordered_map<int, const TObj*>& vis
 	visibleObjects.clear();
 
 	if constexpr (std::is_same<TObj, CUnit>::value) {
-		int iter = 0;
 		for (const auto* obj : unitHandler.GetActiveUnits()) {
 			if (!IsObjectVisible(obj))
 				continue;
@@ -122,7 +121,7 @@ void MatrixUploader::GetVisibleObjects(std::unordered_map<int, const TObj*>& vis
 			if (!IsInView(obj))
 				continue;
 
-			visibleObjects[iter++] = obj;
+			visibleObjects[obj->id] = obj;
 		}
 		return;
 	}
@@ -141,6 +140,7 @@ void MatrixUploader::GetVisibleObjects(std::unordered_map<int, const TObj*>& vis
 		return;
 	}
 
+	//CProjectile part is a mess. TODO figure out how to retrieve an addressable ID
 	if constexpr (std::is_same<TObj, CProjectile>::value) {
 		int iter = 0;
 		for (const auto* obj : visibleProjectilesSet) {
@@ -199,7 +199,7 @@ bool MatrixUploader::UpdateObjectDefs()
 			this->modelToOffsetMap[model->name] = elemBeginIndex;
 			this->elemUpdateOffset = elemEndIndex;
 
-			LOG_L(L_INFO, "MatrixUploader::%s Updated %s name %s with model %s, elemBeginIndex = %d, elemEndIndex = %d", __func__, defName.c_str(), objDef.name.c_str(), model->name.c_str(), elemBeginIndex, elemEndIndex);
+			LOG_L(L_INFO, "MatrixUploader::%s Updated %s name %s with model %s, elemBeginIndex = %d, elemEndIndex = %d", "UpdateObjectDefs", defName.c_str(), objDef.name.c_str(), model->name.c_str(), elemBeginIndex, elemEndIndex);
 		}
 	};
 
@@ -221,7 +221,7 @@ void MatrixUploader::UpdateVisibleObjects()
 
 	if constexpr (std::is_same<TObj, CUnit>::value || std::is_same<TObj, CFeature>::value) {
 		for (const auto& kv : visibleObjects) {
-			const int elemBeginIndex = std::distance(matrices.cbegin(), matrices.cend());
+			const int elemBeginIndex = elemUpdateOffset + std::distance(matrices.cbegin(), matrices.cend());
 
 			const int objID = kv.first;
 			const TObj* obj = kv.second;
@@ -232,10 +232,11 @@ void MatrixUploader::UpdateVisibleObjects()
 				matrices.emplace_back(lmp.GetModelSpaceMatrix());
 			}
 
-			const int elemEndIndex = std::distance(matrices.cbegin(), matrices.cend());
+			const int elemEndIndex = elemUpdateOffset + std::distance(matrices.cbegin(), matrices.cend());
 
 			if constexpr (std::is_same<TObj, CUnit>::value) {
 				unitIDToOffsetMap[objID] = elemBeginIndex;
+				//LOG("Adding new unitID %d, elemBeginIndex %d elemEndIndex %d", objID, elemBeginIndex, elemEndIndex);
 			}
 
 			if constexpr (std::is_same<TObj, CFeature>::value) {
@@ -271,7 +272,7 @@ void MatrixUploader::UpdateAndBind()
 		return;
 
 	matrices.clear();
-	bool updateObjectDefsNow = UpdateObjectDefs(); //will not touch matrices if already updated
+	bool updateObjectDefsNow = UpdateObjectDefs(); //will not touch bindpos matrices if already updated
 
 	UpdateVisibleObjects<CUnit>();
 	UpdateVisibleObjects<CFeature>();
@@ -279,17 +280,16 @@ void MatrixUploader::UpdateAndBind()
 
 	LOG_L(L_INFO, "MatrixUploader::%s matrices.size = [%u]", __func__, static_cast<uint32_t>(matrices.size()));
 
-	matrixSSBO->UnbindBufferRange(GL_SHADER_STORAGE_BUFFER, MATRIX_SSBO_BINDING_IDX, 0, matrixSSBO->GetSize());
-
 	//resize
 	const uint32_t matrixElemCount = GetMatrixElemCount();
 	int newElemCount = 0;
 
 	if (matrices.size() > matrixElemCount) {
-		newElemCount = matrixElemCount + std::max(elemIncreaseBy, static_cast<uint32_t>(matrices.size()));
+		newElemCount = std::max(matrixElemCount + elemIncreaseBy, static_cast<uint32_t>(matrices.size()));
 		LOG_L(L_INFO, "MatrixUploader::%s sizing matrixSSBO %s. New elements count = %d", __func__, "up", newElemCount);
 	}
 
+	matrixSSBO->UnbindBufferRange(GL_SHADER_STORAGE_BUFFER, MATRIX_SSBO_BINDING_IDX, 0, matrixSSBO->GetSize());
 	matrixSSBO->Bind(GL_SHADER_STORAGE_BUFFER);
 
 	if (newElemCount > 0) {
@@ -298,7 +298,7 @@ void MatrixUploader::UpdateAndBind()
 
 	//update on the GPU
 	const uint32_t neededElemByteOffset = (updateObjectDefsNow ? 0u : elemUpdateOffset) * sizeof(CMatrix44f); //map the whole buffer first time, map only varying part next time
-	auto* buff = matrixSSBO->MapBuffer(neededElemByteOffset, matrices.size() * sizeof(CMatrix44f), GL_WRITE_ONLY); //matrices.size() is always correct size no matter neededElemByteOffset
+	auto* buff = matrixSSBO->MapBuffer(neededElemByteOffset, matrices.size() * sizeof(CMatrix44f), GL_WRITE_ONLY); //matrices.size() always has the correct size no matter neededElemByteOffset
 	memcpy(buff, matrices.data(), matrices.size() * sizeof(CMatrix44f));
 	matrixSSBO->UnmapBuffer();
 
