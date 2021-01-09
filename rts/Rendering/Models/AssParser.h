@@ -88,6 +88,7 @@ private:
 	);
 	static void LoadPieceGeometry(
 		SAssPiece* piece,
+		const S3DModel* model,
 		const aiNode* pieceNode,
 		const aiScene* scene
 	);

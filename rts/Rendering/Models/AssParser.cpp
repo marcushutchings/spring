@@ -467,7 +467,7 @@ void CAssParser::SetPieceParentName(
 	}
 }
 
-void CAssParser::LoadPieceGeometry(SAssPiece* piece, const aiNode* pieceNode, const aiScene* scene)
+void CAssParser::LoadPieceGeometry(SAssPiece* piece, const S3DModel* model, const aiNode* pieceNode, const aiScene* scene)
 {
 	std::vector<unsigned> meshVertexMapping;
 
@@ -500,6 +500,7 @@ void CAssParser::LoadPieceGeometry(SAssPiece* piece, const aiNode* pieceNode, co
 
 			// vertex coordinates
 			vertex.pos = aiVectorToFloat3(aiVertex);
+			vertex.pieceIndex = model->numPieces - 1;
 
 			// update piece min/max extents
 			piece->mins = float3::min(piece->mins, vertex.pos);
@@ -638,7 +639,7 @@ SAssPiece* CAssParser::LoadPiece(
 
 
 	LoadPieceTransformations(piece, model, pieceNode, pieceTable);
-	LoadPieceGeometry(piece, pieceNode, scene);
+	LoadPieceGeometry(piece, model, pieceNode, scene);
 	SetPieceParentName(piece, model, pieceNode, pieceTable, parentMap);
 
 	{

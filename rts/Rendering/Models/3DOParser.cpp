@@ -299,6 +299,8 @@ void S3DOPiece::GetPrimitives(
 		const float3 v0v2 = (verts[sp.indices[2]] - verts[sp.indices[0]]);
 		sp.primNormal = (-v0v1.cross(v0v2)).SafeANormalize();
 
+		sp.pieceIndex = model->numPieces - 1;
+
 		// some 3DO's have multiple baseplates (selection primitives)
 		// which are not meant to be rendered, so hide them
 		if (IsBasePlate(&sp))

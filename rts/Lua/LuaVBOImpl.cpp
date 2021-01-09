@@ -621,7 +621,6 @@ sol::as_table_t<std::vector<lua_Number>> LuaVBOImpl::Download(const sol::optiona
 
 	uint32_t pieceIndex = 0;
 */
-
 template<typename TObj>
 size_t LuaVBOImpl::FromDefIDImpl(const int defID)
 {
@@ -670,19 +669,30 @@ size_t LuaVBOImpl::FromDefIDImpl(const int defID)
 			3 * sizeof(float) //strideSizeInBytes
 		};
 
-		// 2 x float2 texCoords
+		// float2 texCoords0
 		this->bufferAttribDefs[4] = {
 			GL_FLOAT, //type
-			4, //size
+			2, //size
 			GL_FALSE, //normalized
-			"texCoords", //name
+			"texCoords0", //name
 			offsetof(SVertexData, texCoords[0]), //pointer
 			sizeof(float), //typeSizeInBytes
-			4 * sizeof(float) //strideSizeInBytes
+			2 * sizeof(float) //strideSizeInBytes
+		};
+
+		// float2 texCoords1
+		this->bufferAttribDefs[5] = {
+			GL_FLOAT, //type
+			2, //size
+			GL_FALSE, //normalized
+			"texCoords1", //name
+			offsetof(SVertexData, texCoords[1]), //pointer
+			sizeof(float), //typeSizeInBytes
+			2 * sizeof(float) //strideSizeInBytes
 		};
 
 		// uint32_t pieceIndex
-		this->bufferAttribDefs[5] = {
+		this->bufferAttribDefs[6] = {
 			GL_UNSIGNED_INT, //type
 			1, //size
 			GL_FALSE, //normalized
@@ -692,7 +702,7 @@ size_t LuaVBOImpl::FromDefIDImpl(const int defID)
 			1 * sizeof(uint32_t) //strideSizeInBytes
 		};
 
-		this->attributesCount = 6;
+		this->attributesCount = 7;
 		this->elemSizeInBytes = sizeof(SVertexData);
 		this->bufferSizeInBytes = vbo->GetSize();
 		this->elementsCount = this->bufferSizeInBytes / this->elemSizeInBytes;

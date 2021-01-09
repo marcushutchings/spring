@@ -7,7 +7,7 @@
 
 #include "lib/sol2/sol.hpp"
 
-#if 1
+#if 0
 #include "System/Log/ILog.h"
 //			LOG("%s, %f, %p, %d, %d", attr.name.c_str(), *iter, mappedBuf, outValSize, bytesWritten);
 #endif
@@ -62,19 +62,17 @@ bool LuaVAOImpl::Supported()
 
 void LuaVAOImpl::AttachBufferImpl(const std::shared_ptr<LuaVBOImpl>& luaVBO, std::shared_ptr<LuaVBOImpl>& thisLuaVBO, GLenum reqTarget)
 {
-	LOG("%s %d", __func__, 1);
 	if (thisLuaVBO) {
 		LuaError("[LuaVAOImpl::%s] LuaVBO already attached", __func__);
 	}
-	LOG("%s %d", __func__, 2);
+
 	if (luaVBO->defTarget != reqTarget) {
 		LuaError("[LuaVAOImpl::%s] LuaVBO should have been created with [%u] target, got [%u] target instead", __func__, reqTarget, luaVBO->defTarget);
 	}
-	LOG("%s %d", __func__, 3);
+
 	if (!luaVBO->vbo) {
 		LuaError("[LuaVAOImpl::%s] LuaVBO is invalid. Did you sucessfully call vbo:Define()?", __func__);
 	}
-	LOG("%s %d", __func__, 4);
 
 	thisLuaVBO = luaVBO;
 
@@ -151,13 +149,20 @@ void LuaVAOImpl::CondInitVAO()
 	GLenum indMin = ~0u;
 	GLenum indMax =  0u;
 
+	const auto glVertexAttribPointerFunc = [](GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* pointer) {
+		if (type == GL_FLOAT)
+			glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+		else //assume int types
+			glVertexAttribIPointer(index, size, type, stride, pointer);
+	};
+
 	for (const auto& va : vertLuaVBO->bufferAttribDefsVec) {
 		const auto& attr = va.second;
 		glEnableVertexAttribArray(va.first);
-		glVertexAttribPointer(va.first, attr.size, attr.type, attr.normalized, vertLuaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
+		glVertexAttribPointerFunc(va.first, attr.size, attr.type, attr.normalized, vertLuaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
 		glVertexAttribDivisor(va.first, 0);
 		indMin = std::min(indMin, static_cast<GLenum>(va.first));
-		indMin = std::min(indMin, static_cast<GLenum>(va.first));
+		indMax = std::max(indMax, static_cast<GLenum>(va.first));
 	}
 
 	if (instLuaVBO) {
@@ -167,10 +172,10 @@ void LuaVAOImpl::CondInitVAO()
 		for (const auto& va : instLuaVBO->bufferAttribDefsVec) {
 			const auto& attr = va.second;
 			glEnableVertexAttribArray(va.first);
-			glVertexAttribPointer(va.first, attr.size, attr.type, attr.normalized, instLuaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
+			glVertexAttribPointerFunc(va.first, attr.size, attr.type, attr.normalized, instLuaVBO->elemSizeInBytes, INT2PTR(attr.pointer));
 			glVertexAttribDivisor(va.first, 1);
 			indMin = std::min(indMin, static_cast<GLenum>(va.first));
-			indMin = std::min(indMin, static_cast<GLenum>(va.first));
+			indMax = std::max(indMax, static_cast<GLenum>(va.first));
 		}
 	}
 
