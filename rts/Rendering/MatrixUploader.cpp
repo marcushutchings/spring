@@ -306,3 +306,61 @@ void MatrixUploader::UpdateAndBind()
 
 	matrixSSBO->BindBufferRange(GL_SHADER_STORAGE_BUFFER, MATRIX_SSBO_BINDING_IDX, 0, matrixSSBO->GetSize());
 }
+
+uint32_t MatrixUploader::GetUnitDefElemOffset(int32_t unitDefID)
+{
+	const auto modelIter = unitDefToModel.find(unitDefID);
+	if (modelIter == unitDefToModel.cend()) {
+		LOG_L(L_ERROR, "MatrixUploader::%s Supplied invalid %s %d", __func__, "UnitDefID", unitDefID);
+		return ~0u;
+	}
+
+	const auto offsetIter = modelToOffsetMap.find(modelIter->second);
+	if (offsetIter == modelToOffsetMap.cend()) { //should never happen, TODO test and remove
+		LOG_L(L_ERROR, "MatrixUploader::%s Failed to find an offset corresponding to model %s of %s %d", __func__, modelIter->second.c_str(), "UnitDefID", unitDefID);
+		return ~0u;
+	}
+
+	return offsetIter->second;
+}
+
+//TODO: DO DRY
+uint32_t MatrixUploader::GetFeatureDefElemOffset(int32_t featureDefID)
+{
+	const auto& modelIter = featureDefToModel.find(featureDefID);
+	if (modelIter == featureDefToModel.cend()) {
+		LOG_L(L_ERROR, "MatrixUploader::%s Supplied invalid %s %d", __func__, "featureDefID", featureDefID);
+		return ~0u;
+	}
+
+	const auto& offsetIter = modelToOffsetMap.find(modelIter->second);
+	if (offsetIter == modelToOffsetMap.cend()) { //should never happen, TODO test and remove
+		LOG_L(L_ERROR, "MatrixUploader::%s Failed to find an offset corresponding to model %s of %s %d", __func__, modelIter->second.c_str(), "featureDefID", featureDefID);
+		return ~0u;
+	}
+
+	return offsetIter->second;
+}
+
+uint32_t MatrixUploader::GetUnitElemOffset(int32_t unitID)
+{
+	const auto& unitIDIter = unitIDToOffsetMap.find(unitID);
+	if (unitIDIter == unitIDToOffsetMap.cend()) {
+		LOG_L(L_ERROR, "MatrixUploader::%s Supplied invalid %s %d", __func__, "UnitID", unitID);
+		return ~0u;
+	}
+
+	return unitIDIter->second;
+}
+
+//TODO: DO DRY
+uint32_t MatrixUploader::GetFeatureElemOffset(int32_t featureID)
+{
+	const auto& featureIDIter = featureIDToOffsetMap.find(featureID);
+	if (featureIDIter == featureIDToOffsetMap.cend()) {
+		LOG_L(L_ERROR, "MatrixUploader::%s Supplied invalid %s %d", __func__, "FeatureID", featureID);
+		return ~0u;
+	}
+
+	return featureIDIter->second;
+}

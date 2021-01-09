@@ -54,6 +54,11 @@ public:
 	void Kill();
 	void UpdateAndBind();
 public:
+	uint32_t GetUnitDefElemOffset(int32_t unitDefID);
+	uint32_t GetFeatureDefElemOffset(int32_t featureDefID);
+	uint32_t GetUnitElemOffset(int32_t unitID);
+	uint32_t GetFeatureElemOffset(int32_t featureID);
+public:
 	friend class ProxyProjectileListener;
 private:
 	template<typename TObj>
@@ -87,9 +92,9 @@ private:
 	std::unordered_map<int32_t, std::string> featureDefToModel;
 	std::unordered_map<std::string, uint32_t> modelToOffsetMap;
 
-	std::unordered_map<int32_t, std::string> unitIDToOffsetMap;
-	std::unordered_map<int32_t, std::string> featureIDToOffsetMap;
-	std::unordered_map<int32_t, std::string> weaponIDToOffsetMap;
+	std::unordered_map<int32_t, uint32_t> unitIDToOffsetMap;
+	std::unordered_map<int32_t, uint32_t> featureIDToOffsetMap;
+	std::unordered_map<int32_t, uint32_t> weaponIDToOffsetMap;
 
 	std::unordered_set<const CProjectile*> visibleProjectilesSet;
 
