@@ -104,7 +104,7 @@ struct S3DModelPiece {
 		parent = nullptr;
 		colvol = {};
 
-		pieceMatrix.LoadIdentity();
+		bposeMatrix.LoadIdentity();
 		bakedMatrix.LoadIdentity();
 
 		offset = ZeroVector;
@@ -161,10 +161,10 @@ public:
 	void Shatter(float, int, int, int, const float3, const float3, const CMatrix44f&) const;
 
 	void SetPieceMatrix(const CMatrix44f& m) {
-		pieceMatrix = m * ComposeTransform(offset, ZeroVector, scales);
+		bposeMatrix = m * ComposeTransform(offset, ZeroVector, scales);
 
 		for (S3DModelPiece* c: children) {
-			c->SetPieceMatrix(pieceMatrix);
+			c->SetPieceMatrix(bposeMatrix);
 		}
 	}
 	void SetBakedMatrix(const CMatrix44f& m) {
@@ -209,7 +209,7 @@ public:
 	S3DModelPiece* parent = nullptr;
 	CollisionVolume colvol;
 
-	CMatrix44f pieceMatrix;      /// bind-pose transform, including baked rots
+	CMatrix44f bposeMatrix;      /// bind-pose transform, including baked rots
 	CMatrix44f bakedMatrix;      /// baked local-space rotations
 
 	float3 offset;               /// local (piece-space) offset wrt. parent piece
