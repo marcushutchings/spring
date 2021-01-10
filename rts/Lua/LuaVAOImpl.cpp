@@ -211,12 +211,13 @@ std::pair<GLsizei, GLsizei> LuaVAOImpl::DrawCheck(const GLenum mode, const sol::
 			LuaError("[LuaVAOImpl::%s]: No index buffer is attached. Did you succesfully call vao:AttachIndexBuffer()?", __func__);
 
 		drawCount = drawCountOpt.value_or(indxLuaVBO->elementsCount);
+		if (drawCount <= 0)
+			drawCount = indxLuaVBO->elementsCount;
 	} else {
 		drawCount = drawCountOpt.value_or(vertLuaVBO->elementsCount);
+		if (drawCount <= 0)
+			drawCount = vertLuaVBO->elementsCount;
 	}
-
-	if (drawCount <= 0)
-		LuaError("[LuaVAOImpl::%s]: %s count[%d] is <= 0", __func__, indexed ? "Indices" : "Vertices", drawCount);
 
 	const auto instanceCount = std::max(instanceCountOpt.value_or(0), 0); // 0 - forces ordinary version, while 1 - calls *Instanced()
 	if (instanceCount > 0 && !instLuaVBO)

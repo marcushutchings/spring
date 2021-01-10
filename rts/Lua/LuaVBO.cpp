@@ -26,8 +26,15 @@ bool LuaVBO::PushEntries(lua_State* L)
 		"Upload", &LuaVBOImpl::Upload,
 		"Download", &LuaVBOImpl::Download,
 
-		"FromUnitDefID", &LuaVBOImpl::FromUnitDefID,
-		"FromFeatureDefID", &LuaVBOImpl::FromFeatureDefID,
+		"ShapeFromUnitDefID", &LuaVBOImpl::ShapeFromUnitDefID,
+		"ShapeFromFeatureDefID", &LuaVBOImpl::ShapeFromFeatureDefID,
+		"ShapeFromUnitID", &LuaVBOImpl::ShapeFromUnitID,
+		"ShapeFromFeatureID", &LuaVBOImpl::ShapeFromFeatureID,
+
+		"OffsetFromUnitDefID", &LuaVBOImpl::OffsetFromUnitDefID,
+		"OffsetFromFeatureDefID", &LuaVBOImpl::OffsetFromFeatureDefID,
+		"OffsetFromUnitID", &LuaVBOImpl::OffsetFromUnitID,
+		"OffsetFromFeatureID", &LuaVBOImpl::OffsetFromFeatureID,
 
 		"BindBufferRange", &LuaVBOImpl::BindBufferRange,
 		"UnbindBufferRange", &LuaVBOImpl::UnbindBufferRange,

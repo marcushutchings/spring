@@ -39,8 +39,8 @@ public:
 
 class MatrixUploader {
 public:
-	static constexpr bool enabled = true; ////////!!!!!!!!!!!!!!!!!!!!
-	//static constexpr bool defsLazyUpdate = true;
+	static constexpr bool enabled = true;
+	static constexpr bool checkInView = false;
 	static MatrixUploader& GetInstance() {
 		static MatrixUploader instance;
 		return instance;

@@ -100,6 +100,9 @@ bool MatrixUploader::IsObjectVisible(const TObj* obj)
 template<typename TObj>
 bool MatrixUploader::IsInView(const TObj* obj)
 {
+	if constexpr(!checkInView)
+		return true;
+
 	constexpr float leewayRadius = 16.0f;
 	if constexpr (std::is_same<TObj, CProjectile>::value)
 		return camera->InView(obj->drawPos, leewayRadius + obj->GetDrawRadius());

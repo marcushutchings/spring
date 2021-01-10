@@ -32,8 +32,15 @@ public:
 	size_t Upload(const sol::stack_table& luaTblData, const sol::optional<int> elemOffsetOpt, const sol::optional<int> attribIdxOpt);
 	sol::as_table_t<std::vector<lua_Number>> Download(const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<int> attribIdxOpt);
 
-	size_t FromUnitDefID(const int id);
-	size_t FromFeatureDefID(const int id);
+	size_t ShapeFromUnitDefID(const int id);
+	size_t ShapeFromFeatureDefID(const int id);
+	size_t ShapeFromUnitID(const int id);
+	size_t ShapeFromFeatureID(const int id);
+
+	size_t OffsetFromUnitDefID(const int id, const int attrID);
+	size_t OffsetFromFeatureDefID(const int id, const int attrID);
+	size_t OffsetFromUnitID(const int id, const int attrID);
+	size_t OffsetFromFeatureID(const int id, const int attrID);
 
 	int BindBufferRange  (const GLuint index, const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<GLenum> targetOpt);
 	int UnbindBufferRange(const GLuint index, const sol::optional<int> elemOffsetOpt, const sol::optional<int> elemCountOpt, const sol::optional<GLenum> targetOpt);
@@ -59,12 +66,18 @@ private:
 	void LuaError(const std::string& format, Args... args);
 
 	template<typename TObj>
-	size_t FromDefIDImpl(const int defID);
+	size_t ShapeFromDefIDImpl(const int defID);
+
+	template<typename TObj>
+	size_t OffsetFromImpl(const int id, const int attrID);
+
+	template<typename TIn>
+	size_t UploadImpl(const std::vector<TIn>& dataVec, const uint32_t elemOffset, const int attribIdx);
 
 	template<typename T>
 	static T MaybeFunc(const sol::table& tbl, const std::string& key, T defValue);
 
-	template<typename TOut, typename TIter>
+	template<typename TIn, typename TOut, typename TIter>
 	bool TransformAndWrite(int& bytesWritten, GLubyte*& mappedBuf, const int mappedBufferSizeInBytes, const int size, TIter& bdvIter, const bool copyData);
 
 	template<typename TIn>
