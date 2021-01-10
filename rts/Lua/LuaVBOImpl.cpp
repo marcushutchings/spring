@@ -609,30 +609,19 @@ size_t LuaVBOImpl::ShapeFromDefIDImpl(const int defID)
 			3 * sizeof(float) //strideSizeInBytes
 		};
 
-		// float2 texCoords0
+		// 2 x float2 texCoords, packed as vec4
 		this->bufferAttribDefs[4] = {
 			GL_FLOAT, //type
-			2, //size
+			4, //size
 			GL_FALSE, //normalized
-			"texCoords0", //name
-			offsetof(SVertexData, texCoords[0]), //pointer
+			"texCoords", //name
+			offsetof(SVertexData, texCoords), //pointer
 			sizeof(float), //typeSizeInBytes
-			2 * sizeof(float) //strideSizeInBytes
-		};
-
-		// float2 texCoords1
-		this->bufferAttribDefs[5] = {
-			GL_FLOAT, //type
-			2, //size
-			GL_FALSE, //normalized
-			"texCoords1", //name
-			offsetof(SVertexData, texCoords[1]), //pointer
-			sizeof(float), //typeSizeInBytes
-			2 * sizeof(float) //strideSizeInBytes
+			4 * sizeof(float) //strideSizeInBytes
 		};
 
 		// uint32_t pieceIndex
-		this->bufferAttribDefs[6] = {
+		this->bufferAttribDefs[5] = {
 			GL_UNSIGNED_INT, //type
 			1, //size
 			GL_FALSE, //normalized
@@ -642,7 +631,7 @@ size_t LuaVBOImpl::ShapeFromDefIDImpl(const int defID)
 			1 * sizeof(uint32_t) //strideSizeInBytes
 		};
 
-		this->attributesCount = 7;
+		this->attributesCount = 6;
 		this->elemSizeInBytes = sizeof(SVertexData);
 		this->bufferSizeInBytes = vbo->GetSize();
 		this->elementsCount = this->bufferSizeInBytes / this->elemSizeInBytes;

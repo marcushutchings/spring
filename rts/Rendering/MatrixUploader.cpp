@@ -202,7 +202,7 @@ bool MatrixUploader::UpdateObjectDefs()
 			this->modelToOffsetMap[model->name] = elemBeginIndex;
 			this->elemUpdateOffset = elemEndIndex;
 
-			LOG_L(L_INFO, "MatrixUploader::%s Updated %s name %s with model %s, elemBeginIndex = %d, elemEndIndex = %d", "UpdateObjectDefs", defName.c_str(), objDef.name.c_str(), model->name.c_str(), elemBeginIndex, elemEndIndex);
+			//LOG_L(L_INFO, "MatrixUploader::%s Updated %s name %s with model %s, elemBeginIndex = %d, elemEndIndex = %d", "UpdateObjectDefs", defName.c_str(), objDef.name.c_str(), model->name.c_str(), elemBeginIndex, elemEndIndex);
 		}
 	};
 
@@ -281,7 +281,7 @@ void MatrixUploader::UpdateAndBind()
 	UpdateVisibleObjects<CFeature>();
 	UpdateVisibleObjects<CProjectile>();
 
-	LOG_L(L_INFO, "MatrixUploader::%s matrices.size = [%u]", __func__, static_cast<uint32_t>(matrices.size()));
+	//LOG_L(L_INFO, "MatrixUploader::%s matrices.size = [%u]", __func__, static_cast<uint32_t>(matrices.size()));
 
 	//resize
 	const uint32_t matrixElemCount = GetMatrixElemCount();
