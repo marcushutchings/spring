@@ -860,7 +860,7 @@ bool CProjectileDrawer::DrawProjectileModel(const CProjectile* p)
 			unitDrawer->SetTeamColour(wp->GetTeamID());
 
 			glPushMatrix();
-				glMultMatrixf(wp->GetTransformMatrix(wp->GetProjectileType() == WEAPON_MISSILE_PROJECTILE));
+				glMultMatrixf(wp->GetTransformMatrix());
 
 				if (!p->luaDraw || !eventHandler.DrawProjectile(p))
 					wp->model->DrawStatic();
@@ -876,8 +876,7 @@ bool CProjectileDrawer::DrawProjectileModel(const CProjectile* p)
 			unitDrawer->SetTeamColour(pp->GetTeamID());
 
 			glPushMatrix();
-				glTranslatef3(pp->drawPos);
-				glRotatef(pp->GetDrawAngle(), pp->spinVec.x, pp->spinVec.y, pp->spinVec.z);
+				glMultMatrixf(pp->GetTransformMatrix());
 
 				if (!p->luaDraw || !eventHandler.DrawProjectile(p)) {
 					if (pp->explFlags & PF_Recursive) {

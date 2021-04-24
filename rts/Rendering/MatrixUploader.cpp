@@ -143,7 +143,7 @@ void MatrixUploader::GetVisibleObjects(std::map<int, const TObj*>& visibleObject
 			//const CWeaponProjectile* wp = p->weapon ? static_cast<const CWeaponProjectile*>(p) : nullptr;
 			//const WeaponDef* wd = p->weapon ? wp->GetWeaponDef() : nullptr;
 
-			if (obj)
+			//if (obj)
 
 			if (!IsObjectVisible(obj))
 				continue;
@@ -156,7 +156,7 @@ void MatrixUploader::GetVisibleObjects(std::map<int, const TObj*>& visibleObject
 		return;
 	}
 
-	static_assert("Wrong TObj in MatrixSSBO::GetVisibleObjects()");
+	assert(false); //Wrong TObj in MatrixSSBO::GetVisibleObjects()
 }
 
 uint32_t MatrixUploader::GetMatrixElemCount()
@@ -245,7 +245,7 @@ void MatrixUploader::UpdateVisibleObjects()
 			const int objID = kv.first;
 			const TObj* obj = kv.second;
 
-			matrices.emplace_back(obj->GetTransformMatrix(obj->GetProjectileType() == WEAPON_MISSILE_PROJECTILE));
+			matrices.emplace_back(obj->GetTransformMatrix());
 
 			const int elemEndIndex = std::distance(matrices.cbegin(), matrices.cend());
 
