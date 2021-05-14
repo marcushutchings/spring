@@ -44,7 +44,7 @@ namespace GL {
 	class NamedSingleState {
 	public:
 		template<typename F, typename Args> NamedSingleState(F func, const Args& args) :
-			object ( new ObjectModel(func, args) ) {
+			object ( new ObjectModel<F, Args>(func, args) ) {
 		}
 
 		NamedSingleState() = delete;
