@@ -548,8 +548,8 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 
 	int dataChunk = syncFrame % GAME_SPEED;
 
-	int idxBeg = (dataChunk + 0) * mapDims.mapxp1 * mapDims.mapyp1 / GAME_SPEED;
-	int idxEnd = (dataChunk + 1) * mapDims.mapxp1 * mapDims.mapyp1 / GAME_SPEED;
+	int idxBeg = ((dataChunk + 0) * mapDims.mapxp1 * mapDims.mapyp1) / GAME_SPEED;
+	int idxEnd = ((dataChunk + 1) * mapDims.mapxp1 * mapDims.mapyp1) / GAME_SPEED;
 
 	if (dataChunk == 0) {
 		if (syncFrame > 0)
@@ -566,7 +566,55 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 		tempHeightBounds.x = std::min(h, tempHeightBounds.x);
 		tempHeightBounds.y = std::max(h, tempHeightBounds.y);
 	}
-#else
+#elif 1
+	__m128 bestMin = _mm_loadu_ps(&(*heightMapSyncedPtr)[idxBeg]);
+	__m128 bestMax = _mm_shuffle_ps(bestMin, bestMin, 0b11100100);
+
+	int startIdx = idxBeg + 4; // skip first four since they are already loaded.
+	int endIdx = idxEnd - 4; // done to ensure main loop cannot go past end of assigned data
+
+	for (int idx = startIdx; idx < endIdx; idx+=4) {
+		__m128 nextVals = _mm_loadu_ps(&(*heightMapSyncedPtr)[idx]);
+
+		bestMin = _mm_min_ps(bestMin, nextVals);
+		bestMax = _mm_max_ps(bestMax, nextVals);
+	}
+
+	// last round: load last four entries (may overlap with last iteration of the main loop)
+	{
+		__m128 nextVals = _mm_loadu_ps(&(*heightMapSyncedPtr)[endIdx]);
+
+		bestMin = _mm_min_ps(bestMin, nextVals);
+		bestMax = _mm_max_ps(bestMax, nextVals);
+	}
+
+	// resolve function horizontally for min
+	{
+		// split the four values into sets of two and compare
+		__m128 bestCur = _mm_load_ss(&tempHeightBounds.x);
+		__m128 bestAlt = _mm_shuffle_ps(bestMin, bestMin, 0b00001110);
+		bestMin = _mm_min_ps(bestMin, bestAlt);
+
+		// split the two values and compare
+		bestAlt = _mm_shuffle_ps(bestMin, bestMin, 0x01);
+		bestMin = _mm_min_ss(bestMin, bestAlt);
+		bestMin = _mm_min_ss(bestMin, bestCur);
+		_mm_store_ss(&tempHeightBounds.x, bestMin);
+	}
+	// resolve function horizontally for max
+	{
+		// split the four values into sets of two and compare
+		__m128 bestCur = _mm_load_ss(&tempHeightBounds.y);
+		__m128 bestAlt = _mm_shuffle_ps(bestMax, bestMax, 0b00001110);
+		bestMax = _mm_max_ps(bestMax, bestAlt);
+
+		// split the two values and compare
+		bestAlt = _mm_shuffle_ps(bestMax, bestMax, 0x01);
+		bestMax = _mm_max_ss(bestMax, bestAlt);
+		bestMax = _mm_max_ss(bestMax, bestCur);
+		_mm_store_ss(&tempHeightBounds.y, bestMax);
+	}
+#elif 0
 	// // Cache align check
 	// int alignOff = ((int)(*heightMapSyncedPtr)[0]) & 0x3f; // MSBs are not needed
 
@@ -589,7 +637,7 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 		usingThreads = maxThreads;
 	}
 
-	std::vector<float2> threadResults(usingThreads);
+	std::array<float2, ThreadPool::MAX_THREADS> threadResults;
 
 	for_mt (0, usingThreads, [this, chunksPerThread, &threadResults, idxBeg, idxEnd](const int jobId) {
 
@@ -606,6 +654,86 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 
 			result.x = std::min(h, result.x);
 			result.y = std::max(h, result.y);
+		}
+
+		threadResults[jobId] = result;
+	});
+
+	for (int idx = 0; idx < usingThreads; ++idx) {
+		tempHeightBounds.x = std::min(threadResults[idx].x, tempHeightBounds.x);
+		tempHeightBounds.y = std::max(threadResults[idx].y, tempHeightBounds.y);
+	}
+#else
+	// Untested branch since introduction of SSE intrinsics.
+
+	// // Cache align check
+	// int alignOff = ((int)(*heightMapSyncedPtr)[0]) & 0x3f; // MSBs are not needed
+
+	// if (alignOff != 0) { // well shit...
+	// // TODO sort this out
+	// }
+
+	int elements = idxEnd - idxBeg;
+	static const int chunkSize = 16; // 64 / sizeof(float)
+	int minChunksForCacheLine = elements / chunkSize;
+	minChunksForCacheLine = elements % chunkSize ? minChunksForCacheLine + 1 : minChunksForCacheLine;
+
+	int maxThreads = ThreadPool::GetMaxThreads();
+	int chunksPerThread = 1;
+	int usingThreads = minChunksForCacheLine;
+
+	if (minChunksForCacheLine > maxThreads) {
+		chunksPerThread = minChunksForCacheLine / maxThreads;
+		chunksPerThread = minChunksForCacheLine % maxThreads ? chunksPerThread + 1: chunksPerThread;
+		usingThreads = maxThreads;
+	}
+
+	std::array<float2, ThreadPool::MAX_THREADS> threadResults;
+
+	for_mt (0, usingThreads, [this, chunksPerThread, &threadResults, idxBeg, idxEnd](const int jobId) {
+
+		int startSection = idxBeg + jobId*chunksPerThread*chunkSize;
+		int endSection = startSection + chunksPerThread*chunkSize;
+		endSection = endSection > idxEnd ? idxEnd : endSection;
+
+		float2 result;
+		result.x = std::numeric_limits<float>::max();
+		result.y = std::numeric_limits<float>::lowest();
+
+		__m128 bestMin = _mm_loadu_ps(&(*heightMapSyncedPtr)[startSection]);
+		__m128 bestMax = _mm_shuffle_ps(bestMin, bestMin, 0b11100100);
+
+		int startIdx = startSection + 4; // skip first four since they are already loaded.
+		int endIdx = endSection - 4; // done to ensure main loop cannot go past end of assigned data
+
+		for (int idx = startIdx; idx < endIdx; idx+=4) {
+			__m128 nextVals = _mm_loadu_ps(&(*heightMapSyncedPtr)[idx]);
+
+			bestMin = _mm_min_ps(bestMin, nextVals);
+			bestMax = _mm_max_ps(bestMax, nextVals);
+		}
+
+		// resolve function horizontally for min
+		{
+			// split the four values into sets of two and compare
+			__m128 bestAlt = _mm_shuffle_ps(bestMin, bestMin, 0b00001110);
+			bestMin = _mm_min_ps(bestMin, bestAlt);
+
+			// split the two values and compare
+			bestAlt = _mm_shuffle_ps(bestMin, bestMin, 0x01);
+			bestMin = _mm_min_ss(bestMin, bestAlt);
+			_mm_store_ss(&result.x, bestMin);
+		}
+		// resolve function horizontally for max
+		{
+			// split the four values into sets of two and compare
+			__m128 bestAlt = _mm_shuffle_ps(bestMax, bestMax, 0b00001110);
+			bestMax = _mm_max_ps(bestMax, bestAlt);
+
+			// split the two values and compare
+			bestAlt = _mm_shuffle_ps(bestMax, bestMax, 0x01);
+			bestMax = _mm_max_ss(bestMax, bestAlt);
+			_mm_store_ss(&result.y, bestMax);
 		}
 
 		threadResults[jobId] = result;
