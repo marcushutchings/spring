@@ -666,8 +666,6 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 		tempHeightBounds.y = std::max(threadResults[idx].y, tempHeightBounds.y);
 	}
 #else
-	// Untested branch since introduction of SSE intrinsics.
-
 	// // Cache align check
 	// int alignOff = ((int)(*heightMapSyncedPtr)[0]) & 0x3f; // MSBs are not needed
 
