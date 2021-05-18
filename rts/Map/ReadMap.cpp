@@ -541,6 +541,12 @@ void CReadMap::UpdateHeightMapSynced(const SRectangle& hgtMapRect, bool initiali
 	#endif
 }
 
+template<class T> inline bool sse_resolve_horizontal(const T &xmmreg, const T func) {
+	__m128 splitreg = _mm_shuffle_ps(xmmreg, xmmreg, _MM_SHUFFLE(0, 0, 3, 2));
+	xmmreg = func(xmmreg, splitreg);
+	splitreg = _mm_shuffle_ps(xmmreg, xmmreg, _MM_SHUFFLE(0, 0, 0, 1));
+	xmmreg = func(xmmreg, splitreg);
+}
 
 void CReadMap::UpdateHeightBounds(int syncFrame)
 {
@@ -592,7 +598,7 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 	{
 		// split the four values into sets of two and compare
 		__m128 bestCur = _mm_load_ss(&tempHeightBounds.x);
-		__m128 bestAlt = _mm_shuffle_ps(bestMin, bestMin, _MM_SHUFFLE(0, 0, 3, 2));
+		__m128 bestAlt = _mm_movehl_ps(bestMin, bestMin);
 		bestMin = _mm_min_ps(bestMin, bestAlt);
 
 		// split the two values and compare
@@ -605,7 +611,7 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 	{
 		// split the four values into sets of two and compare
 		__m128 bestCur = _mm_load_ss(&tempHeightBounds.y);
-		__m128 bestAlt = _mm_shuffle_ps(bestMax, bestMax, _MM_SHUFFLE(0, 0, 3, 2));
+		__m128 bestAlt = _mm_movehl_ps(bestMax, bestMax);
 		bestMax = _mm_max_ps(bestMax, bestAlt);
 
 		// split the two values and compare
@@ -614,6 +620,9 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 		bestMax = _mm_max_ss(bestMax, bestCur);
 		_mm_store_ss(&tempHeightBounds.y, bestMax);
 	}
+
+	//LOG("Tarnished Knight: Temp Result -> Min: %f, max: %f", tempHeightBounds.x, tempHeightBounds.y);
+	//LOG("Tarnished Knight: Curr Result -> Min: %f, max: %f", currHeightBounds.x, currHeightBounds.y);
 #elif 0
 	// // Cache align check
 	// int alignOff = ((int)(*heightMapSyncedPtr)[0]) & 0x3f; // MSBs are not needed
