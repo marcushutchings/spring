@@ -568,7 +568,7 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 	}
 #elif 1
 	__m128 bestMin = _mm_loadu_ps(&(*heightMapSyncedPtr)[idxBeg]);
-	__m128 bestMax = _mm_shuffle_ps(bestMin, bestMin, 0b11100100);
+	__m128 bestMax = _mm_shuffle_ps(bestMin, bestMin, _MM_SHUFFLE(3, 2, 1, 0));
 
 	int startIdx = idxBeg + 4; // skip first four since they are already loaded.
 	int endIdx = idxEnd - 4; // done to ensure main loop cannot go past end of assigned data
@@ -592,11 +592,11 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 	{
 		// split the four values into sets of two and compare
 		__m128 bestCur = _mm_load_ss(&tempHeightBounds.x);
-		__m128 bestAlt = _mm_shuffle_ps(bestMin, bestMin, 0b00001110);
+		__m128 bestAlt = _mm_shuffle_ps(bestMin, bestMin, _MM_SHUFFLE(0, 0, 3, 2));
 		bestMin = _mm_min_ps(bestMin, bestAlt);
 
 		// split the two values and compare
-		bestAlt = _mm_shuffle_ps(bestMin, bestMin, 0x01);
+		bestAlt = _mm_shuffle_ps(bestMin, bestMin, _MM_SHUFFLE(0, 0, 0, 1));
 		bestMin = _mm_min_ss(bestMin, bestAlt);
 		bestMin = _mm_min_ss(bestMin, bestCur);
 		_mm_store_ss(&tempHeightBounds.x, bestMin);
@@ -605,11 +605,11 @@ void CReadMap::UpdateHeightBounds(int syncFrame)
 	{
 		// split the four values into sets of two and compare
 		__m128 bestCur = _mm_load_ss(&tempHeightBounds.y);
-		__m128 bestAlt = _mm_shuffle_ps(bestMax, bestMax, 0b00001110);
+		__m128 bestAlt = _mm_shuffle_ps(bestMax, bestMax, _MM_SHUFFLE(0, 0, 3, 2));
 		bestMax = _mm_max_ps(bestMax, bestAlt);
 
 		// split the two values and compare
-		bestAlt = _mm_shuffle_ps(bestMax, bestMax, 0x01);
+		bestAlt = _mm_shuffle_ps(bestMax, bestMax, _MM_SHUFFLE(0, 0, 0, 1));
 		bestMax = _mm_max_ss(bestMax, bestAlt);
 		bestMax = _mm_max_ss(bestMax, bestCur);
 		_mm_store_ss(&tempHeightBounds.y, bestMax);
