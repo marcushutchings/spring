@@ -22,6 +22,8 @@
 #include "System/creg/STL_Deque.h"
 #include "System/creg/STL_Set.h"
 
+#include "System/Threading/ThreadPool.h"
+
 
 CR_BIND(CUnitHandler, )
 CR_REG_METADATA(CUnitHandler, (
@@ -330,7 +332,6 @@ void CUnitHandler::UpdateUnitLosStates()
 	}
 }
 
-
 void CUnitHandler::SlowUpdateUnits()
 {
 	SCOPED_TIMER("Sim::Unit::SlowUpdate");
@@ -340,18 +341,47 @@ void CUnitHandler::SlowUpdateUnits()
 	if ((gs->frameNum % UNIT_SLOWUPDATE_RATE) == 0)
 		activeSlowUpdateUnit = 0;
 
-	// stagger the SlowUpdate's
 	for (size_t n = (activeUnits.size() / UNIT_SLOWUPDATE_RATE) + 1; (activeSlowUpdateUnit < activeUnits.size() && n != 0); ++activeSlowUpdateUnit) {
 		CUnit* unit = activeUnits[activeSlowUpdateUnit];
-
 		unit->SanityCheck();
 		unit->SlowUpdate();
 		unit->SlowUpdateWeapons();
 		unit->localModel.UpdateBoundingVolume();
 		unit->SanityCheck();
-
 		n--;
 	}
+
+	auto currentFrame = gs->frameNum;
+	auto activeUnitsRef = &activeUnits;
+
+	static const size_t SLOWEST_UPDATE_RATE = 30;
+
+	for_mt(0, 2, [this, currentFrame, activeUnitsRef](const int jobId) {
+	 	if (jobId == 0) {
+			size_t cmdSlowFrame = ((currentFrame) % SLOWEST_UPDATE_RATE);
+			size_t cmdStartIdx = ((cmdSlowFrame + 0)*activeUnits.size()) / SLOWEST_UPDATE_RATE;
+			size_t cmdEndIdx = ((cmdSlowFrame + 1)*activeUnits.size()) / SLOWEST_UPDATE_RATE;
+
+			for (size_t i = cmdStartIdx; i<cmdEndIdx; ++i){
+				CUnit* unit = (*activeUnitsRef)[i];
+				bool canProcessUnit = (!unit->isDead) & (!unit->beingBuilt) & (!unit->IsStunned());
+				if (canProcessUnit) unit->commandAI->SlowUpdate();
+			}
+	 	}
+	 	else if (jobId == 1){
+			if (currentFrame == 0) return;
+
+			size_t moveSlowFrame = ((currentFrame - 1) % SLOWEST_UPDATE_RATE);
+			size_t moveStartIdx = ((moveSlowFrame + 0)*activeUnits.size()) / SLOWEST_UPDATE_RATE;
+			size_t moveEndIdx = ((moveSlowFrame + 1)*activeUnits.size()) / SLOWEST_UPDATE_RATE;
+
+			for (size_t i = moveStartIdx; i<moveEndIdx; ++i){
+				CUnit* unit = (*activeUnitsRef)[i];
+				bool canProcessUnit = (!unit->isDead) & (!unit->beingBuilt) & (!unit->IsStunned());
+				if (canProcessUnit) unit->moveType->SlowUpdate();
+			}
+	 	}
+	});
 }
 
 void CUnitHandler::UpdateUnits()

@@ -66,6 +66,8 @@
 #include "System/Sound/ISoundChannels.h"
 #include "System/Sync/SyncedPrimitive.h"
 
+#include "System/TimeProfiler.h"
+
 #undef near
 
 
@@ -906,6 +908,8 @@ void CUnit::SetStunned(bool stun) {
 
 void CUnit::SlowUpdate()
 {
+{
+//	SCOPED_TIMER("AA::SlowUpdate:Start");
 	UpdatePosErrorParams(false, true);
 
 	DoWaterDamage();
@@ -926,9 +930,13 @@ void CUnit::SlowUpdate()
 		paralyzeDamage -= ((modInfo.paralyzeOnMaxHealth? maxHealth: health) * (UNIT_SLOWUPDATE_RATE / float(GAME_SPEED)) * CUnit::empDeclineRate);
 		paralyzeDamage = std::max(paralyzeDamage, 0.0f);
 	}
-
+}
+{
+//	SCOPED_TIMER("AA::SlowUpdate:UpdateResources");
 	UpdateResources();
-
+}
+{
+//	SCOPED_TIMER("AA::SlowUpdate:Stunned");
 	if (IsStunned()) {
 		// call this because we can be pushed into a different quad while stunned
 		// which would make us invulnerable to most non-/small-AOE weapon impacts
@@ -944,7 +952,9 @@ void CUnit::SlowUpdate()
 		SlowUpdateCloak(true);
 		return;
 	}
-
+}
+{
+//	SCOPED_TIMER("AA::SlowUpdate:Misc");
 	if (selfDCountdown > 0) {
 		if ((selfDCountdown -= 1) == 0) {
 			// avoid unfinished buildings making an explosion
@@ -975,12 +985,19 @@ void CUnit::SlowUpdate()
 		ScriptDecloak(nullptr, nullptr);
 		return;
 	}
-
+}
 	// below is stuff that should not be run while being built
-	commandAI->SlowUpdate();
-	moveType->SlowUpdate();
+// {
+// 	SCOPED_TIMER("AA::SlowUpdate:CommandAI");
+// 	commandAI->SlowUpdate();
+// }
+// {
+// 	SCOPED_TIMER("AA::SlowUpdate:MoveType");
+// 	moveType->SlowUpdate();
+// }
 
-
+{
+//	SCOPED_TIMER("AA::SlowUpdate:ResStuff");
 	// FIXME: scriptMakeMetal ...?
 	AddMetal(resourcesUncondMake.metal);
 	AddEnergy(resourcesUncondMake.energy);
@@ -1026,15 +1043,23 @@ void CUnit::SlowUpdate()
 		health += unitDef->autoHeal;
 		health = std::min(health, maxHealth);
 	}
-
+}
+{
+//	SCOPED_TIMER("AA::SlowUpdate:Cloak");
 	SlowUpdateCloak(false);
+}
+{
+//	SCOPED_TIMER("AA::SlowUpdate:Kamikaze");
 	SlowUpdateKamikaze(fireState >= FIRESTATE_FIREATWILL);
-
+}
+{
+//	SCOPED_TIMER("AA::SlowUpdate:Terrain");
 	if (moveType->progressState == AMoveType::Active)
 		DoSeismicPing(seismicSignature);
 
 	CalculateTerrainType();
 	UpdateTerrainType();
+}
 }
 
 
