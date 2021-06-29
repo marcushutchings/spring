@@ -31,7 +31,7 @@ public:
 	 * @brief default Constructor
 	 * With parameters, initializes x/y/z to 0.0f.
 	 */
-	constexpr float3() : x(0.0f), y(0.0f), z(0.0f) {}
+	constexpr float3() : x(0.0f), y(0.0f), z(0.0f), w(0.0f) {}
 
 	/**
 	 * @brief Constructor
@@ -42,7 +42,7 @@ public:
 	 * With parameters, initializes x/y/z to the given floats.
 	 */
 	constexpr float3(const float x, const float y, const float z)
-			: x(x), y(y), z(z) {}
+			: x(x), y(y), z(z), w(0.0f) {}
 
 	/**
 	 * @brief float[3] Constructor
@@ -50,7 +50,7 @@ public:
 	 *
 	 * With parameters, initializes x/y/z to the given float[3].
 	 */
-	constexpr float3(const float f[3]) : x(f[0]), y(f[1]), z(f[2]) {}
+	constexpr float3(const float f[3]) : x(f[0]), y(f[1]), z(f[2]), w(0.0f) {}
 
 	/**
 	 * @brief operator =
@@ -699,11 +699,11 @@ public:
 
 public:
 	union {
-		struct { float x,y,z; };
-		struct { float r,g,b; };
-		struct { float x1,y1,x2; };
-		struct { float s,t,p; };
-		struct { float xstart, ystart, xend; };
+		struct { float x,y,z,w; };
+		struct { float r,g,b,a; };
+		struct { float x1,y1,x2,y2; };
+		struct { float s,t,p,q; };
+		struct { float xstart, ystart, xend, yend; };
 		struct { float xyz[3]; };
 	};
 };

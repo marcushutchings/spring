@@ -299,12 +299,12 @@ public:
 	uint8_t usMemBuffer[368];
 	// sufficient for the largest AMoveType (CGroundMoveType)
 	// need two buffers since ScriptMoveType might be enabled
-	uint8_t amtMemBuffer[498];
-	uint8_t smtMemBuffer[370];
+	uint8_t amtMemBuffer[536];
+	uint8_t smtMemBuffer[400];
 	// sufficient for the largest CommandAI type (CBuilderCAI)
 	// knowing the exact CAI object size here is not required;
 	// static asserts will catch any overflow
-	uint8_t caiMemBuffer[700];
+	uint8_t caiMemBuffer[712];
 
 
 	std::vector<CWeapon*> weapons;

@@ -8,9 +8,9 @@
 
 #if (defined(__x86_64) || defined(__x86_64__))
 // NOTE: ~742MB, way too big for 32-bit builds
-typedef StaticMemPool<MAX_UNITS * MAX_WEAPONS_PER_UNIT, 760> WeaponMemPool;
+typedef StaticMemPool<MAX_UNITS * MAX_WEAPONS_PER_UNIT, 820> WeaponMemPool;
 #else
-typedef FixedDynMemPool<760, (MAX_UNITS * MAX_WEAPONS_PER_UNIT) / 4000, (MAX_UNITS * MAX_WEAPONS_PER_UNIT) / 256> WeaponMemPool;
+typedef FixedDynMemPool<820, (MAX_UNITS * MAX_WEAPONS_PER_UNIT) / 4000, (MAX_UNITS * MAX_WEAPONS_PER_UNIT) / 256> WeaponMemPool;
 #endif
 
 extern WeaponMemPool weaponMemPool;

@@ -231,7 +231,7 @@ void CVertexArray::DrawArrayN(const int drawType, unsigned int stride)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glVertexPointer(3, GL_FLOAT, stride, drawArray);
-	glNormalPointer(GL_FLOAT, stride, drawArray + 3);
+	glNormalPointer(GL_FLOAT, stride, drawArray + 4);
 	DrawArrays(drawType, stride);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
@@ -247,7 +247,7 @@ void CVertexArray::DrawArrayC(const int drawType, unsigned int stride)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glVertexPointer(3, GL_FLOAT, stride, drawArray);
-	glColorPointer(4, GL_UNSIGNED_BYTE, stride, drawArray + 3);
+	glColorPointer(4, GL_UNSIGNED_BYTE, stride, drawArray + 4);
 	DrawArrays(drawType, stride);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
@@ -263,7 +263,7 @@ void CVertexArray::DrawArrayT(const int drawType, unsigned int stride)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, stride, drawArray);
-	glTexCoordPointer(2, GL_FLOAT, stride, drawArray + 3);
+	glTexCoordPointer(2, GL_FLOAT, stride, drawArray + 4);
 	DrawArrays(drawType, stride);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
@@ -332,8 +332,8 @@ void CVertexArray::DrawArrayTN(const int drawType, unsigned int stride)
 	glEnableClientState(GL_NORMAL_ARRAY);
 
 	glVertexPointer(3, GL_FLOAT, stride, drawArray);
-	glTexCoordPointer(2, GL_FLOAT, stride, drawArray + 3);
-	glNormalPointer(GL_FLOAT, stride, drawArray + 5);
+	glTexCoordPointer(2, GL_FLOAT, stride, drawArray + 4);
+	glNormalPointer(GL_FLOAT, stride, drawArray + 6);
 	DrawArrays(drawType, stride);
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -358,13 +358,13 @@ void CVertexArray::DrawArrayTNT(const int drawType, unsigned int stride)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_NORMAL_ARRAY);
 
-	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE0); glTexCoordPointer(2, GL_FLOAT, stride, drawArray +  3);
-	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE1); glTexCoordPointer(2, GL_FLOAT, stride, drawArray +  3); // FIXME? (format-specific)
-	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE5); glTexCoordPointer(3, GL_FLOAT, stride, drawArray +  8);
-	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE6); glTexCoordPointer(3, GL_FLOAT, stride, drawArray + 11);
+	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE0); glTexCoordPointer(2, GL_FLOAT, stride, drawArray +  4);
+	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE1); glTexCoordPointer(2, GL_FLOAT, stride, drawArray +  4); // FIXME? (format-specific)
+	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE5); glTexCoordPointer(3, GL_FLOAT, stride, drawArray +  9);
+	SET_ENABLE_ACTIVE_TEX(GL_TEXTURE6); glTexCoordPointer(3, GL_FLOAT, stride, drawArray + 13);
 
 	glVertexPointer(3, GL_FLOAT, stride, drawArray + 0);
-	glNormalPointer(GL_FLOAT, stride, drawArray + 5);
+	glNormalPointer(GL_FLOAT, stride, drawArray + 6);
 
 	DrawArrays(drawType, stride);
 
@@ -391,8 +391,8 @@ void CVertexArray::DrawArrayTC(const int drawType, unsigned int stride)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	glVertexPointer(3, GL_FLOAT, stride, drawArray);
-	glTexCoordPointer(2, GL_FLOAT, stride, drawArray + 3);
-	glColorPointer(4, GL_UNSIGNED_BYTE, stride, drawArray + 5);
+	glTexCoordPointer(2, GL_FLOAT, stride, drawArray + 4);
+	glColorPointer(4, GL_UNSIGNED_BYTE, stride, drawArray + 6);
 	DrawArrays(drawType, stride);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);

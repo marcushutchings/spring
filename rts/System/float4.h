@@ -13,19 +13,11 @@ struct float4 : public float3
 {
 	CR_DECLARE_STRUCT(float4)
 
-	union {
-		struct { float w; };
-		struct { float a; };
-		struct { float y2; };
-		struct { float q; };
-		struct { float yend; };
-	};
-
 	// x, y and z are default to 0.0f in float3()
-	constexpr float4() : float3(), w(0.0f) {}
-	constexpr float4(const float3& f, const float w = 0.0f): float3(f), w(w) {}
-	constexpr float4(const float* f): float3(f[0], f[1], f[2]), w(f[3]) {}
-	constexpr float4(const float x, const float y, const float z, const float w = 0.0f): float3(x, y, z), w(w) {}
+	constexpr float4() : float3() {}
+	constexpr float4(const float3& f, const float w = 0.0f): float3(f) {this->w = w;}
+	constexpr float4(const float* f): float3(f[0], f[1], f[2]) {this->w = f[3];}
+	constexpr float4(const float x, const float y, const float z, const float w = 0.0f): float3(x, y, z) {this->w = w;}
 
 	float4 operator * (const float4& f) const { return {x * f.x, y * f.y, z * f.z, w * f.w}; }
 	float4 operator + (const float4& f) const { return {x + f.x, y + f.y, z + f.z, w + f.w}; }
