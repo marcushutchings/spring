@@ -3,6 +3,8 @@
 #ifndef FLOAT3_H
 #define FLOAT3_H
 
+#include <immintrin.h>
+
 #include <cassert>
 
 #include "System/BranchPrediction.h"
@@ -52,6 +54,10 @@ public:
 	 */
 	constexpr float3(const float f[3]) : x(f[0]), y(f[1]), z(f[2]), w(0.0f) {}
 
+	//constexpr float3(const float f[4], int _ignored) : x(f[0]), y(f[1]), z(f[2]), w(f[3]) {}
+
+	float3(const __m128 f) { _mm_storeu_ps(xyzw, f); }
+
 	/**
 	 * @brief operator =
 	 * @param f float[3] to assign
@@ -88,7 +94,14 @@ public:
 	 * space (adds the x/y/z components individually)
 	 */
 	float3 operator+ (const float3& f) const {
-		return float3(x + f.x, y + f.y, z + f.z);
+		//float res[4];
+
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_add_ps(a, b);
+		//_mm_storeu_ps(res, result);
+
+		return float3(result);
 	}
 
 	/**
@@ -100,7 +113,14 @@ public:
 	 * increased in all directions by that float.
 	 */
 	float3 operator+ (const float f) const {
-		return float3(x + f, y + f, z + f);
+		//float res[4];
+
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(f);
+		__m128 result = _mm_add_ps(a, b);
+		//_mm_storeu_ps(res, result);
+
+		return float3(result);
 	}
 
 	/**
@@ -111,9 +131,11 @@ public:
 	 * float with the new sum.
 	 */
 	float3& operator+= (const float3& f) {
-		x += f.x;
-		y += f.y;
-		z += f.z;
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_add_ps(a, b);
+		_mm_storeu_ps(xyzw, result);
+
 		return *this;
 	}
 
@@ -126,7 +148,14 @@ public:
 	 * subtracting each x/y/z component individually.
 	 */
 	float3 operator- (const float3& f) const {
-		return float3(x - f.x, y - f.y, z - f.z);
+		//float res[4];
+
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_sub_ps(a, b);
+		//_mm_storeu_ps(res, result);
+
+		return float3(result);
 	}
 
 	/**
@@ -138,7 +167,11 @@ public:
 	 * decreases all three x/y/z components by that amount.
 	 */
 	float3 operator- (const float f) const {
-		return float3(x - f, y - f, z - f);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(f);
+		__m128 result = _mm_sub_ps(a, b);
+
+		return float3(result);
 	}
 
 	/**
@@ -149,9 +182,10 @@ public:
 	 * the new float3 inside this one.
 	 */
 	void operator-= (const float3& f) {
-		x -= f.x;
-		y -= f.y;
-		z -= f.z;
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_sub_ps(a, b);
+		_mm_storeu_ps(xyzw, result);
 	}
 
 
@@ -163,7 +197,11 @@ public:
 	 * x/y/z components.
 	 */
 	float3 operator- () const {
-		return float3(-x, -y, -z);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(-1.0f);
+		__m128 result = _mm_mul_ps(a, b);
+
+		return float3(result);
 	}
 
 
@@ -176,7 +214,11 @@ public:
 	 * multiplies each x/y/z component individually.
 	 */
 	float3 operator* (const float3& f) const {
-		return float3(x * f.x, y * f.y, z * f.z);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_mul_ps(a, b);
+
+		return float3(result);
 	}
 
 	/**
@@ -188,7 +230,11 @@ public:
 	 * each x/y/z component by that float.
 	 */
 	float3 operator* (const float f) const {
-		return float3(x * f, y * f, z * f);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(f);
+		__m128 result = _mm_mul_ps(a, b);
+
+		return float3(result);
 	}
 
 	/**
@@ -199,9 +245,10 @@ public:
 	 * the new float3 inside this one.
 	 */
 	void operator*= (const float3& f) {
-		x *= f.x;
-		y *= f.y;
-		z *= f.z;
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_mul_ps(a, b);
+		_mm_storeu_ps(xyzw, result);
 	}
 
 	/**
@@ -212,9 +259,11 @@ public:
 	 * the new float3 inside this one.
 	 */
 	float3& operator*= (const float f) {
-		x *= f;
-		y *= f;
-		z *= f;
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(f);
+		__m128 result = _mm_mul_ps(a, b);
+		_mm_storeu_ps(xyzw, result);
+
 		return *this;
 	}
 
@@ -227,7 +276,13 @@ public:
 	 * each x/y/z component individually.
 	 */
 	float3 operator/ (const float3& f) const {
-		return float3(x / f.x, y / f.y, z / f.z);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 mask = _mm_cmpeq_ps(_mm_set1_ps(0.0), b);
+		__m128 div = _mm_div_ps(a, b);
+		__m128 result = _mm_andnot_ps(mask, div);
+		
+		return float3(result);
 	}
 
 	/**
@@ -239,7 +294,11 @@ public:
 	 * each x/y/z component by that float.
 	 */
 	float3 operator/ (const float f) const {
-		return ((*this) * (1.0f / f));
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(f);
+		__m128 result = _mm_div_ps(a, b);
+
+		return float3(result);
 	}
 
 	/**
@@ -250,9 +309,12 @@ public:
 	 * the new values inside this float3.
 	 */
 	void operator/= (const float3& f) {
-		x /= f.x;
-		y /= f.y;
-		z /= f.z;
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 mask = _mm_cmpeq_ps(_mm_set1_ps(0.0), b);
+		__m128 div = _mm_div_ps(a, b);
+		__m128 result = _mm_andnot_ps(mask, div);
+		_mm_storeu_ps(xyzw, result);
 	}
 
 	/**
@@ -263,7 +325,10 @@ public:
 	 * the new values inside this float3.
 	 */
 	void operator/= (const float f) {
-		(*this) *= (1.0f / f);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_set_ps1(f);
+		__m128 result = _mm_div_ps(a, b);
+		_mm_storeu_ps(xyzw, result);
 	}
 
 
@@ -342,7 +407,11 @@ public:
 	 * x/y/z component).
 	 */
 	float dot(const float3& f) const {
-		return (x * f.x) + (y * f.y) + (z * f.z);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+		__m128 result = _mm_dp_ps(a, b, 0x71); /* 7 = (0111) parts to dot product, 1 = (0001) store result */
+
+		return _mm_cvtss_f32(result);
 	}
 
 	/**
@@ -366,14 +435,43 @@ public:
 	 * Calculates the cross product of this and
 	 * another float3:
 	 * (y1*z2 - z1*y2, z1*x2 - x1*z2, x1*y2 - y1*x2)
+	 * 
+	 * Ref: Method #5 from https://geometrian.com/programming/tutorials/cross-product/index.php
 	 */
 	float3 cross(const float3& f) const {
-		return float3(
-				(y * f.z) - (z * f.y),
-				(z * f.x) - (x * f.z),
-				(x * f.y) - (y * f.x));
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+
+		__m128 a1 = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3,0,2,1));
+		__m128 b1 = _mm_shuffle_ps(b, b, _MM_SHUFFLE(3,1,0,2));
+
+		__m128 tmp = _mm_mul_ps(a1, b);
+		__m128 a2 = _mm_mul_ps(a1, b1);
+		__m128 b2 = _mm_shuffle_ps(tmp, tmp, _MM_SHUFFLE(3,0,2,1));
+
+		return float3(_mm_sub_ps(a2, b2));
+
+		// Original Code
+		// return float3(
+		// 		(y * f.z) - (z * f.y),
+		// 		(z * f.x) - (x * f.z),
+		// 		(x * f.y) - (y * f.x));
+
+		// SSE Model
+		// tmp       | (a2)        (b2)
+		// (a1* b)   | (a1* b1)    (tmp shuffled)
+		// (y * f.x) | (y * f.z) - (z * f.y)
+		// (z * f.y) | (z * f.x) - (x * f.z)
+		// (x * f.z) | (x * f.y) - (y * f.x)
 	}
 
+	// float hsum_ps_sse1(__m128 v) {                                  // v = [ D C | B A ]
+	// 	__m128 shuf   = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2, 3, 0, 1));  // [ C D | A B ]
+	// 	__m128 sums   = _mm_add_ps(v, shuf);      // sums = [ D+C C+D | B+A A+B ]
+	// 	shuf          = _mm_movehl_ps(shuf, sums);      //  [   C   D | D+C C+D ]  // let the compiler avoid a mov by reusing shuf
+	// 	sums          = _mm_add_ss(sums, shuf);
+	// 	return    _mm_cvtss_f32(sums);
+	// }
 
 	/**
 	 * @brief distance between float3s
@@ -385,10 +483,24 @@ public:
 	 * x/y/z component, square root for pythagorean theorem)
 	 */
 	float distance(const float3& f) const {
-		const float dx = x - f.x;
-		const float dy = y - f.y;
-		const float dz = z - f.z;
-		return math::sqrt(dx*dx + dy*dy + dz*dz);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+
+		__m128 delta = _mm_sub_ps(a, b);
+		__m128 v = _mm_mul_ps(delta, delta);
+
+		// Combine values into a scalar
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 sums = _mm_add_ss(v, shuf);
+		       shuf = _mm_movehl_ps(v, v);
+		       sums = _mm_add_ss(sums, shuf);
+
+		return _mm_cvtss_f32(_mm_sqrt_ss(sums));
+
+		// const float dx = x - f.x;
+		// const float dy = y - f.y;
+		// const float dz = z - f.z;
+		// return math::sqrt(dx*dx + dy*dy + dz*dz);
 	}
 
 	/**
@@ -417,10 +529,24 @@ public:
 	 * Returns the squared distance of 2 float3s
 	 */
 	float SqDistance(const float3& f) const {
-		const float dx = x - f.x;
-		const float dy = y - f.y;
-		const float dz = z - f.z;
-		return (dx*dx + dy*dy + dz*dz);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 b = _mm_loadu_ps(f.xyzw);
+
+		__m128 delta = _mm_sub_ps(a, b);
+		__m128 v = _mm_mul_ps(delta, delta);
+
+		// Combine values into a scalar
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 sums = _mm_add_ss(v, shuf);
+		       shuf = _mm_movehl_ps(v, v);
+		       sums = _mm_add_ss(sums, shuf);
+
+		return _mm_cvtss_f32(sums);
+
+		// const float dx = x - f.x;
+		// const float dy = y - f.y;
+		// const float dz = z - f.z;
+		// return (dx*dx + dy*dy + dz*dz);
 	}
 
 	/**
@@ -447,8 +573,26 @@ public:
 	 */
 	float Length() const {
 		//assert(x!=0.f || y!=0.f || z!=0.f);
-		return math::sqrt(SqLength());
+
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 v = _mm_mul_ps(a, a);
+
+		// Combine values into a scalar
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 sums = _mm_add_ss(v, shuf);
+		       shuf = _mm_movehl_ps(v, v);
+		       sums = _mm_add_ss(sums, shuf);
+
+		return _mm_cvtss_f32(_mm_sqrt_ss(sums));
+
+		// return math::sqrt(SqLength());
 	}
+
+	// vec4 version
+	// __m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+	// __m128 sums = _mm_add_ps(v, shuf);
+	//        shuf = _mm_movehl_ps(sums, sums);
+	//        sums = _mm_add_ss(sums, shuf);
 
 	/**
 	 * @brief 2-dimensional length of this vector
@@ -470,7 +614,18 @@ public:
 	 * Returns the length of this vector squared.
 	 */
 	float SqLength() const {
-		return (x*x + y*y + z*z);
+		__m128 a = _mm_loadu_ps(xyzw);
+		__m128 v = _mm_mul_ps(a, a);
+
+		// Combine values into a scalar
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 sums = _mm_add_ss(v, shuf);
+		       shuf = _mm_movehl_ps(v, v);
+		       sums = _mm_add_ss(sums, shuf);
+
+		return _mm_cvtss_f32(sums);
+
+		// return (x*x + y*y + z*z);
 	}
 
 	/**
@@ -532,7 +687,15 @@ public:
 	 * x/y/z component by the vector's length.
 	 */
 	float3& UnsafeNormalize() {
-		return ((*this) *= math::isqrt(SqLength()));
+		float len = SqLength();
+
+		__m128 length = _mm_load_ss(&len);
+		__m128 isqrt = _mm_rsqrt_ss(length);
+		float normv = _mm_cvtss_f32(isqrt);
+
+		return ((*this) *= normv);
+
+		//return ((*this) *= math::isqrt(SqLength()));
 	}
 
 	float3& UnsafeNormalize2D() {
@@ -550,8 +713,14 @@ public:
 	float3& SafeNormalize() {
 		const float sql = SqLength();
 
-		if (likely(sql > nrm_eps()))
-			(*this) *= math::isqrt(sql);
+		if (likely(sql > nrm_eps())){
+			__m128 length = _mm_load_ss(&sql);
+			__m128 isqrt = _mm_rsqrt_ss(length);
+			float normv = _mm_cvtss_f32(isqrt);
+
+			(*this) *= normv;
+		}
+		//	(*this) *= math::isqrt(sql);
 
 		return *this;
 	}
@@ -593,8 +762,18 @@ public:
 	 * the vector's approx. length.
 	 */
 	float3& UnsafeANormalize() {
-		assert(SqLength() > nrm_eps());
-		return ((*this) *= math::isqrt(SqLength()));
+		//assert(SqLength() > nrm_eps());
+
+		float sql = SqLength();
+		assert(sql > nrm_eps());
+
+		__m128 length = _mm_load_ss(&sql);
+		__m128 isqrt = _mm_rsqrt_ss(length);
+		float normv = _mm_cvtss_f32(isqrt);
+
+		return ((*this) *= normv);
+
+		// return ((*this) *= math::isqrt(SqLength()));
 	}
 
 	float3& UnsafeANormalize2D() {
@@ -613,8 +792,14 @@ public:
 	float3& SafeANormalize() {
 		const float sql = SqLength();
 
-		if (likely(sql > nrm_eps()))
-			(*this) *= math::isqrt(sql);
+		if (likely(sql > nrm_eps())){
+			__m128 length = _mm_load_ss(&sql);
+			__m128 isqrt = _mm_rsqrt_ss(length);
+			float normv = _mm_cvtss_f32(isqrt);
+
+			(*this) *= normv;
+		}
+		//	(*this) *= math::isqrt(sql);
 
 		return *this;
 	}
@@ -705,6 +890,7 @@ public:
 		struct { float s,t,p,q; };
 		struct { float xstart, ystart, xend, yend; };
 		struct { float xyz[3]; };
+		struct { float xyzw[4]; };
 	};
 };
 

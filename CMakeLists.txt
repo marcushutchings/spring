@@ -430,7 +430,7 @@ elseif (CMAKE_COMPILER_IS_GNUCXX)
 
 		# disable rest
 		#set(FALLBACK_SSE_FLAGS "${FALLBACK_SSE_FLAGS} -mno-3dnow") tests showed it might sync
-		set(FALLBACK_SSE_FLAGS "${FALLBACK_SSE_FLAGS} -mno-sse2 -mno-sse3 -mno-ssse3 -mno-sse4.1 -mno-sse4.2 -mno-sse4 -mno-sse4a")
+		set(FALLBACK_SSE_FLAGS "${FALLBACK_SSE_FLAGS} -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -msse4 -msse4a")
 		set(FALLBACK_SSE_FLAGS "${FALLBACK_SSE_FLAGS} -mno-avx -mno-fma -mno-fma4 -mno-xop -mno-lwp")
 		set(FALLBACK_SSE_FLAGS "${FALLBACK_SSE_FLAGS} -mno-avx2")
 

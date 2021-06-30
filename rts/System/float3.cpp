@@ -47,12 +47,28 @@ void float3::ClampInMap()
 
 float3 float3::min(const float3 v1, const float3 v2)
 {
-	return {std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z)};
+	float3 result;
+
+	__m128 a = _mm_loadu_ps(v1.xyzw);
+	__m128 b = _mm_loadu_ps(v2.xyzw);
+	_mm_storeu_ps(result.xyzw, _mm_min_ps(a, b));
+
+	return result;
+
+//	return {std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z)};
 }
 
 float3 float3::max(const float3 v1, const float3 v2)
 {
-	return {std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z)};
+	float3 result;
+
+	__m128 a = _mm_loadu_ps(v1.xyzw);
+	__m128 b = _mm_loadu_ps(v2.xyzw);
+	_mm_storeu_ps(result.xyzw, _mm_max_ps(a, b));
+
+	return result;
+
+	//return {std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z)};
 }
 
 float3 float3::fabs(const float3 v)
