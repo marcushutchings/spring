@@ -407,11 +407,22 @@ public:
 	 * x/y/z component).
 	 */
 	float dot(const float3& f) const {
+		// return (x * f.x) + (y * f.y) + (z * f.z);
 		__m128 a = _mm_loadu_ps(xyzw);
 		__m128 b = _mm_loadu_ps(f.xyzw);
-		__m128 result = _mm_dp_ps(a, b, 0x71); /* 7 = (0111) parts to dot product, 1 = (0001) store result */
 
-		return _mm_cvtss_f32(result);
+		__m128 v = _mm_mul_ps(a, b);
+
+		// Combine values into a scalar
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+		__m128 sums = _mm_add_ss(v, shuf);
+		       shuf = _mm_movehl_ps(v, v);
+		       sums = _mm_add_ss(sums, shuf);
+
+		// This would be the SSE 4.1 version
+		//__m128 result = _mm_dp_ps(a, b, 0x71); /* 7 = (0111) parts to dot product, 1 = (0001) store result */
+
+		return _mm_cvtss_f32(sums);
 	}
 
 	/**
@@ -490,7 +501,7 @@ public:
 		__m128 v = _mm_mul_ps(delta, delta);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -536,7 +547,7 @@ public:
 		__m128 v = _mm_mul_ps(delta, delta);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -578,7 +589,7 @@ public:
 		__m128 v = _mm_mul_ps(a, a);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -589,7 +600,7 @@ public:
 	}
 
 	// vec4 version
-	// __m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+	// __m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
 	// __m128 sums = _mm_add_ps(v, shuf);
 	//        shuf = _mm_movehl_ps(sums, sums);
 	//        sums = _mm_add_ss(sums, shuf);
@@ -618,7 +629,7 @@ public:
 		__m128 v = _mm_mul_ps(a, a);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
