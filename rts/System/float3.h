@@ -414,7 +414,7 @@ public:
 		__m128 v = _mm_mul_ps(a, b);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -501,7 +501,7 @@ public:
 		__m128 v = _mm_mul_ps(delta, delta);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -547,7 +547,7 @@ public:
 		__m128 v = _mm_mul_ps(delta, delta);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -589,7 +589,7 @@ public:
 		__m128 v = _mm_mul_ps(a, a);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
@@ -600,7 +600,7 @@ public:
 	}
 
 	// vec4 version
-	// __m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+	// __m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
 	// __m128 sums = _mm_add_ps(v, shuf);
 	//        shuf = _mm_movehl_ps(sums, sums);
 	//        sums = _mm_add_ss(sums, shuf);
@@ -629,7 +629,7 @@ public:
 		__m128 v = _mm_mul_ps(a, a);
 
 		// Combine values into a scalar
-		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(1,0,3,2));
+		__m128 shuf = _mm_shuffle_ps(v, v, _MM_SHUFFLE(2,3,0,1));
 		__m128 sums = _mm_add_ss(v, shuf);
 		       shuf = _mm_movehl_ps(v, v);
 		       sums = _mm_add_ss(sums, shuf);
