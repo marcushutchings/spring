@@ -128,7 +128,7 @@ public:
 	 * @param f float3 reference to add.
 	 *
 	 * Just like adding a float3, but updates this
-	 * float with the new sum.
+	 * float3 with the new sum.
 	 */
 	float3& operator+= (const float3& f) {
 		__m128 a = _mm_loadu_ps(xyzw);
@@ -278,9 +278,7 @@ public:
 	float3 operator/ (const float3& f) const {
 		__m128 a = _mm_loadu_ps(xyzw);
 		__m128 b = _mm_loadu_ps(f.xyzw);
-		__m128 mask = _mm_cmpeq_ps(_mm_set1_ps(0.0), b);
-		__m128 div = _mm_div_ps(a, b);
-		__m128 result = _mm_andnot_ps(mask, div);
+		__m128 result = _mm_div_ps(a, b);
 		
 		return float3(result);
 	}
@@ -311,9 +309,7 @@ public:
 	void operator/= (const float3& f) {
 		__m128 a = _mm_loadu_ps(xyzw);
 		__m128 b = _mm_loadu_ps(f.xyzw);
-		__m128 mask = _mm_cmpeq_ps(_mm_set1_ps(0.0), b);
-		__m128 div = _mm_div_ps(a, b);
-		__m128 result = _mm_andnot_ps(mask, div);
+		__m128 result = _mm_div_ps(a, b);
 		_mm_storeu_ps(xyzw, result);
 	}
 
