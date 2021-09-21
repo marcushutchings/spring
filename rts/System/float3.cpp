@@ -18,7 +18,6 @@ bool float3::IsInBounds() const
 	return ((x >= 0.0f && x <= maxxpos) && (z >= 0.0f && z <= maxzpos));
 }
 
-
 void float3::ClampInBounds()
 {
 	assert(maxxpos > 0.0f); // check if initialized
@@ -44,32 +43,38 @@ void float3::ClampInMap()
 	z = Clamp(z, 0.0f, maxzpos + 1);
 }
 
+#ifndef USESSEFLOAT3
 
 float3 float3::min(const float3 v1, const float3 v2)
 {
-	float3 result;
+	return {std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z)};
+}
 
+float3 float3::max(const float3 v1, const float3 v2)
+{
+	return {std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z)};
+}
+
+#else
+
+float3 float3::min(const float3 v1, const float3 v2) {
+	float3 result;
 	__m128 a = _mm_loadu_ps(v1.xyzw);
 	__m128 b = _mm_loadu_ps(v2.xyzw);
 	_mm_storeu_ps(result.xyzw, _mm_min_ps(a, b));
 
 	return result;
-
-//	return {std::min(v1.x, v2.x), std::min(v1.y, v2.y), std::min(v1.z, v2.z)};
 }
 
-float3 float3::max(const float3 v1, const float3 v2)
-{
+float3 float3::max(const float3 v1, const float3 v2) {
 	float3 result;
-
 	__m128 a = _mm_loadu_ps(v1.xyzw);
 	__m128 b = _mm_loadu_ps(v2.xyzw);
 	_mm_storeu_ps(result.xyzw, _mm_max_ps(a, b));
 
 	return result;
-
-	//return {std::max(v1.x, v2.x), std::max(v1.y, v2.y), std::max(v1.z, v2.z)};
 }
+#endif
 
 float3 float3::fabs(const float3 v)
 {

@@ -437,7 +437,7 @@ void CWorldDrawer::DrawBelowWaterOverlay() const
 				float3(cpos.x + vr, 0.0f, cpos.z - vr)
 			};
 
-			glVertexPointer(3, GL_FLOAT, 0, verts);
+			glVertexPointer(3, GL_FLOAT, sizeof(float3), verts);
 			glDrawArrays(GL_QUADS, 0, 4);
 		}
 
@@ -455,7 +455,7 @@ void CWorldDrawer::DrawBelowWaterOverlay() const
 				float3(cpos.x - vr,  -vr, cpos.z - vr),
 			};
 
-			glVertexPointer(3, GL_FLOAT, 0, verts);
+			glVertexPointer(3, GL_FLOAT, sizeof(float3), verts);
 			glDrawArrays(GL_QUAD_STRIP, 0, 10);
 		}
 
@@ -478,7 +478,7 @@ void CWorldDrawer::DrawBelowWaterOverlay() const
 			float3(0.0f, 1.0f, -1.0f),
 		};
 
-		glVertexPointer(3, GL_FLOAT, 0, verts);
+		glVertexPointer(3, GL_FLOAT, sizeof(float3), verts);
 		glDrawArrays(GL_QUADS, 0, 4);
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}

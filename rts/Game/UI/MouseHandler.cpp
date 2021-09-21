@@ -559,7 +559,7 @@ void CMouseHandler::DrawSelectionBox()
 
 	
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, 0, boxVerts);
+	glVertexPointer(3, GL_FLOAT, sizeof(float3), boxVerts);
 	glDrawArrays(GL_LINE_LOOP, 0, 4);
 	glDisableClientState(GL_VERTEX_ARRAY);
 

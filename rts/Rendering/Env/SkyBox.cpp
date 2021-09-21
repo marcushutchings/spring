@@ -87,7 +87,7 @@ void CSkyBox::Draw()
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glTexCoordPointer(3, GL_FLOAT, 0, texcoords);
+	glTexCoordPointer(3, GL_FLOAT, sizeof(float3), texcoords);
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 	glDrawArrays(GL_QUADS, 0, 4);
 
