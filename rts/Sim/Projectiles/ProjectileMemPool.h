@@ -5,11 +5,16 @@
 
 #include "Sim/Misc/GlobalConstants.h"
 #include "System/MemPoolTypes.h"
+#include "System/SpringMath.h"
+
+#include "Sim/Projectiles/WeaponProjectiles/FireBallProjectile.h"
+
+static constexpr size_t PMP_S = AlignUp(sizeof(CFireBallProjectile), 4); //biggest in size
 
 #if (defined(__x86_64) || defined(__x86_64__))
-typedef StaticMemPool<MAX_PROJECTILES, 970> ProjMemPool;
+typedef StaticMemPool<MAX_PROJECTILES, PMP_S> ProjMemPool;
 #else
-typedef FixedDynMemPool<970, MAX_PROJECTILES / 2000, MAX_PROJECTILES / 64> ProjMemPool;
+typedef FixedDynMemPool<PMP_S, MAX_PROJECTILES / 2000, MAX_PROJECTILES / 64> ProjMemPool;
 #endif
 
 extern ProjMemPool projMemPool;

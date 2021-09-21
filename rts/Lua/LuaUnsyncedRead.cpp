@@ -40,6 +40,7 @@
 #include "Rendering/Env/IWater.h"
 #include "Rendering/Env/IGroundDecalDrawer.h"
 #include "Rendering/Env/Decals/DecalsDrawerGL4.h"
+#include "Rendering/Env/Particles/Classes/NanoProjectile.h"
 #include "Rendering/Map/InfoTexture/IInfoTextureHandler.h"
 #include "Sim/Features/Feature.h"
 #include "Sim/Features/FeatureDef.h"
@@ -161,6 +162,8 @@ bool LuaUnsyncedRead::PushEntries(lua_State* L)
 	REGISTER_LUA_CFUNC(GetMapSquareTexture);
 
 	REGISTER_LUA_CFUNC(GetLosViewColors);
+
+	REGISTER_LUA_CFUNC(GetNanoProjectileParams);
 
 	REGISTER_LUA_CFUNC(GetCameraNames);
 	REGISTER_LUA_CFUNC(GetCameraState);
@@ -1367,6 +1370,15 @@ int LuaUnsyncedRead::GetLosViewColors(lua_State* L)
 	return 5;
 }
 
+int LuaUnsyncedRead::GetNanoProjectileParams(lua_State* L)
+{
+	lua_pushnumber(L, CNanoProjectile::rotVal0 * (math::RAD_TO_DEG * GAME_SPEED               ));
+	lua_pushnumber(L, CNanoProjectile::rotVel0 * (math::RAD_TO_DEG * (GAME_SPEED * GAME_SPEED)));
+	lua_pushnumber(L, CNanoProjectile::rotAcc0 * (math::RAD_TO_DEG                            ));
+
+	return 3;
+}
+
 
 /******************************************************************************/
 
@@ -2238,15 +2250,21 @@ int LuaUnsyncedRead::GetKeySymbol(lua_State* L)
 	return 2;
 }
 
-
 int LuaUnsyncedRead::GetKeyBindings(lua_State* L)
 {
-	CKeySet ks;
+	CKeyBindings::ActionList actions;
+	const std::string& argument = luaL_optstring(L, 1, "");
 
-	if (!ks.Parse(luaL_checksstring(L, 1)))
-		return 0;
+	if (argument.empty()) {
+		actions = keyBindings.GetActionList();
+	} else {
+		CKeySet ks;
 
-	const CKeyBindings::ActionList& actions = keyBindings.GetActionList(ks);
+		if (!ks.Parse(luaL_checksstring(L, 1)))
+			return 0;
+
+		actions = keyBindings.GetActionList(ks);
+	}
 
 	int i = 1;
 	lua_newtable(L);

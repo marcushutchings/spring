@@ -305,6 +305,21 @@ void CKeyBindings::Kill()
 
 
 /******************************************************************************/
+const CKeyBindings::ActionList& CKeyBindings::GetActionList() const
+{
+	static ActionList merged; //FIXME switch to thread_local (?)
+	const ActionList* alPtr;
+
+	for (const auto& p: bindings) {
+		const ActionList& al = p.second;
+
+		merged.insert(merged.end(), al.begin(), al.end());
+	}
+
+	alPtr = &merged;
+
+	return *alPtr;
+}
 
 const CKeyBindings::ActionList& CKeyBindings::GetActionList(const CKeySet& ks) const
 {
