@@ -10,6 +10,10 @@
 #endif
 
 
+inline float3 operator*(float f, const float3& v) {
+	return v * f;
+}
+
 /**
  * @brief upwards vector
  *

@@ -479,6 +479,15 @@ public:
 	// 	return    _mm_cvtss_f32(sums);
 	// }
 
+	float3 rotate(float angle, const float3& axis) {
+		const float ca = math::cos(angle);
+		const float sa = math::sin(angle);
+
+		//Rodrigues' rotation formula
+		// https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula
+		return (*this) * ca + axis.cross(*this) * sa + axis * axis.dot(*this) * (1.0f - ca);
+	}
+
 	/**
 	 * @brief distance between float3s
 	 * @param f float3 to compare against
