@@ -134,6 +134,12 @@ constexpr T AlignDown(T value, size_t size)
 	return static_cast<T>(value - value % size);
 }
 
+template <typename A>
+constexpr A ConstexprMax(A a,A b) { return (a>b) ? a : b; }
+
+template <typename A, typename ... Args>
+constexpr A ConstexprMax(A a, A b, Args ... args) { return ConstexprMax(ConstexprMax(a,b),args...); }
+
 /**
  * @brief does a division and returns additionally the remnant
  */
